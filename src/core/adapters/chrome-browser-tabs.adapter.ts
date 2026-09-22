@@ -1,7 +1,7 @@
 import { IBrowserTabsPort } from '../ports/browser-tabs.port';
 import { TabItem } from '../domain/tab.types';
 import { TabGroup } from '../domain/group.types';
-import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
+import { ChromeGroupColor, toNativeChromeTabGroupColor } from '@/ui/tokens/colors.tokens';
 
 export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
   async getOpenTabs(): Promise<readonly TabItem[]> {
@@ -85,13 +85,38 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
   async closeTabs(tabIds: readonly string[]): Promise<void> {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
 
-    const numericIds = tabIds
-      .map((id) => Number(id))
-      .filter((id) => !Number.isNaN(id));
+    const openTabs = await chrome.tabs.query({});
+    const tabMap = new Map(openTabs.map((t) => [t.id, t]));
 
-    if (numericIds.length > 0) {
-      await chrome.tabs.remove(numericIds);
+    // Filtrar IDs para JAMÁS cerrar pestañas fijadas (pinned)
+    const safeNumericIds: number[] = [];
+    for (const strId of tabIds) {
+      const numId = Number(strId);
+      if (Number.isNaN(numId)) continue;
+      const tab = tabMap.get(numId);
+      if (tab && !tab.pinned) {
+        safeNumericIds.push(numId);
+      }
     }
+
+    if (safeNumericIds.length === 0) return;
+
+    // Si cerrar estas pestañas dejaría la ventana vacía (provocando el cierre de Chrome),
+    // abrimos primero el dashboard o una pestaña limpia para mantener Chrome activo.
+    const nonPinnedTabs = openTabs.filter((t) => !t.pinned);
+    if (safeNumericIds.length >= nonPinnedTabs.length) {
+      const dashboardUrl = chrome.runtime?.getURL
+        ? chrome.runtime.getURL('dashboard.html')
+        : 'chrome://newtab';
+      const isDashboardAlreadyOpen = openTabs.some(
+        (t) => t.url && t.url.includes('dashboard.html')
+      );
+      if (!isDashboardAlreadyOpen) {
+        await chrome.tabs.create({ url: dashboardUrl, active: true });
+      }
+    }
+
+    await chrome.tabs.remove(safeNumericIds);
   }
 
   async discardTabs(tabIds: readonly string[]): Promise<void> {
@@ -143,7 +168,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
     if (groupDetails && chrome.tabGroups?.update) {
       await chrome.tabGroups.update(targetGroupId, {
         title: groupDetails.title,
-        color: groupDetails.color,
+        color: toNativeChromeTabGroupColor(groupDetails.color),
       });
     }
 
@@ -175,7 +200,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
 
     const updates: chrome.tabGroups.UpdateProperties = {};
     if (title !== undefined) updates.title = title;
-    if (color !== undefined) updates.color = color;
+    if (color !== undefined) updates.color = toNativeChromeTabGroupColor(color);
     if (collapsed !== undefined) updates.collapsed = collapsed;
 
     await chrome.tabGroups.update(numericGroupId, updates);
@@ -188,12 +213,13 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
     if (Number.isNaN(numericGroupId)) return;
 
     const tabsInGroup = await chrome.tabs.query({ groupId: numericGroupId });
-    const tabIds = tabsInGroup.map((t) => t.id!).filter(Boolean);
+    const tabIds = tabsInGroup.map((t) => String(t.id)).filter(Boolean);
 
     if (closeTabs) {
-      await chrome.tabs.remove(tabIds);
+      await this.closeTabs(tabIds);
     } else {
-      await chrome.tabs.ungroup(tabIds);
+      const numericIds = tabIds.map(Number);
+      await chrome.tabs.ungroup(numericIds);
     }
   }
 

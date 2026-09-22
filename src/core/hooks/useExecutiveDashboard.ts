@@ -14,13 +14,14 @@ export function useExecutiveDashboard() {
 
   const [tabTaxonomyMap, setTabTaxonomyMap] = useState<Map<string, MarpDomainTaxonomy>>(new Map());
   const [isClassifying, setIsClassifying] = useState(false);
+  const [isGrouping, setIsGrouping] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
-  // Clasificar pestañas con Laya Core en segundo plano
+  // Clasificar pestañas con Laya Core en segundo plano de manera reactiva
   useEffect(() => {
     let isCancelled = false;
 
-    async function runClassification() {
+    async function runBackgroundClassification() {
       if (tabs.length === 0) return;
       const unclassified = tabs.filter((t) => !tabTaxonomyMap.has(t.id));
       if (unclassified.length === 0) return;
@@ -47,7 +48,7 @@ export function useExecutiveDashboard() {
       }
     }
 
-    runClassification();
+    runBackgroundClassification();
 
     return () => {
       isCancelled = true;
@@ -63,11 +64,79 @@ export function useExecutiveDashboard() {
     );
   }, [tabs, sessions, inboxLinks, tabTaxonomyMap]);
 
-  // Acción ejecutiva 1: Congelar inactivas (Liberar RAM sin cerrar)
+  // Botón Manual 1: "Clasificar" (dispara clasificación manual explícita con Laya)
+  const manualClassify = useCallback(async () => {
+    if (tabs.length === 0) {
+      setActionFeedback('No hay pestañas abiertas para clasificar.');
+      return;
+    }
+    setIsClassifying(true);
+    try {
+      const classifications = await container.classifier.classifyBatch(
+        tabs.map((t) => ({ title: t.title, url: t.url }))
+      );
+
+      const nextMap = new Map<string, MarpDomainTaxonomy>();
+      tabs.forEach((tab, index) => {
+        nextMap.set(tab.id, classifications[index].primaryDomain);
+      });
+      setTabTaxonomyMap(nextMap);
+      setActionFeedback(
+        `Laya Core clasificó exitosamente ${tabs.length} pestañas en ${new Set(classifications.map((c) => c.primaryDomain)).size} dominios.`
+      );
+    } catch (err) {
+      setActionFeedback(`Error al clasificar: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+    } finally {
+      setIsClassifying(false);
+    }
+  }, [tabs]);
+
+  // Opción 1: Agrupar por Tema / Tipo (Laya)
+  const groupByTopic = useCallback(async () => {
+    if (tabs.length === 0) {
+      setActionFeedback('No hay pestañas abiertas para agrupar.');
+      return;
+    }
+    setIsGrouping(true);
+    try {
+      const result = await container.tabGroupService.groupByTopic();
+      await refreshTabs();
+      setActionFeedback(
+        `Se agruparon ${result.groupedCount} pestañas en ${result.groupsCreated} grupos por Tema/Tipo (Laya).`
+      );
+    } catch (err) {
+      setActionFeedback(`Error al agrupar por tema: ${err instanceof Error ? err.message : 'Error'}`);
+    } finally {
+      setIsGrouping(false);
+    }
+  }, [tabs, refreshTabs]);
+
+  // Opción 2: Agrupar por Dominio Web
+  const groupByDomain = useCallback(async () => {
+    if (tabs.length === 0) {
+      setActionFeedback('No hay pestañas abiertas para agrupar.');
+      return;
+    }
+    setIsGrouping(true);
+    try {
+      const result = await container.tabGroupService.groupByDomain();
+      await refreshTabs();
+      setActionFeedback(
+        `Se agruparon ${result.groupedCount} pestañas en ${result.groupsCreated} grupos por Dominio Web.`
+      );
+    } catch (err) {
+      setActionFeedback(`Error al agrupar por dominio: ${err instanceof Error ? err.message : 'Error'}`);
+    } finally {
+      setIsGrouping(false);
+    }
+  }, [tabs, refreshTabs]);
+
+  // Acción ejecutiva: Congelar inactivas (Liberar RAM sin cerrar)
   const freezeInactiveTabs = useCallback(async () => {
+    // NUNCA congelar ni tocar pestañas fijadas (pinned)
     const inactiveTabs = tabs.filter((t) => !t.active && !t.pinned && !t.discarded);
     if (inactiveTabs.length === 0) {
-      setActionFeedback('No hay pestañas inactivas elegibles para congelar.');
+      setActionFeedback('No hay pestañas inactivas elegibles para congelar (las fijadas están protegidas).');
       return;
     }
     const ids = inactiveTabs.map((t) => t.id);
@@ -76,12 +145,15 @@ export function useExecutiveDashboard() {
     setActionFeedback(`Se suspendieron ${ids.length} pestañas. ~${ramFreedMb} MB de RAM liberada.`);
   }, [tabs, suspendTabs]);
 
-  // Acción ejecutiva 2: Deduplicar pestañas
+  // Acción ejecutiva: Deduplicar pestañas
   const deduplicateTabs = useCallback(async () => {
     const seenUrls = new Set<string>();
     const duplicateIds: string[] = [];
 
     tabs.forEach((tab) => {
+      // Las pestañas fijadas JAMÁS se consideran duplicadas a cerrar
+      if (tab.pinned) return;
+
       const cleanUrl = tab.url.split('?')[0].replace(/\/$/, '');
       if (seenUrls.has(cleanUrl)) {
         duplicateIds.push(tab.id);
@@ -99,32 +171,19 @@ export function useExecutiveDashboard() {
     setActionFeedback(`Se cerraron ${duplicateIds.length} pestañas duplicadas.`);
   }, [tabs, closeTabs]);
 
-  // Acción ejecutiva 3: Auto-clasificar sesión con Laya Core / MARP
-  const autoClassifySession = useCallback(async () => {
-    setIsClassifying(true);
-    try {
-      const result = await container.tabGroupService.autoClassifyAndGroupOpenTabs();
-      await refreshTabs();
-      setActionFeedback(
-        `Laya clasificó ${result.groupedCount} pestañas en ${result.categories.length} grupos semánticos.`
-      );
-    } catch (err) {
-      setActionFeedback(`Error en auto-clasificación: ${err instanceof Error ? err.message : 'Error'}`);
-    } finally {
-      setIsClassifying(false);
-    }
-  }, [refreshTabs]);
-
   return {
     tabs,
     groups,
     metrics,
     isClassifying,
+    isGrouping,
     actionFeedback,
     clearFeedback: () => setActionFeedback(null),
+    manualClassify,
+    groupByTopic,
+    groupByDomain,
     freezeInactiveTabs,
     deduplicateTabs,
-    autoClassifySession,
     tabTaxonomyMap,
   };
 }

@@ -73,7 +73,7 @@ export const GroupManagementModal: React.FC<GroupManagementModalProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-content-secondary uppercase mb-2">
-            Color (Paleta Oficial de Chrome)
+            Color del Grupo (16 Colores Disponibles)
           </label>
           <div className="flex items-center gap-2.5 flex-wrap">
             {CHROME_GROUP_COLORS.map((c) => {

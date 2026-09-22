@@ -15,24 +15,24 @@ describe('LayaMarpClassifierAdapter', () => {
     expect(result.suggestedGroupName).toContain('Código');
   });
 
-  it('debe clasificar artículos científicos en research con color púrpura', async () => {
+  it('debe clasificar artículos científicos en research con color índigo', async () => {
     const result = await adapter.classifyTab(
       'Attention Is All You Need - arXiv paper benchmark study',
       'https://arxiv.org/abs/1706.03762'
     );
 
     expect(result.primaryDomain).toBe('research');
-    expect(result.suggestedColor).toBe('purple');
+    expect(result.suggestedColor).toBe('indigo');
     expect(result.suggestedGroupName).toContain('Investigación');
   });
 
-  it('debe clasificar videos de YouTube en media con color rojo', async () => {
+  it('debe clasificar videos de YouTube en media con color rosa intenso (rose)', async () => {
     const result = await adapter.classifyTab(
       'YouTube - LLaMA 3 Architecture Deep Dive Video',
       'https://youtube.com/watch?v=sample'
     );
 
     expect(result.primaryDomain).toBe('media');
-    expect(result.suggestedColor).toBe('red');
+    expect(result.suggestedColor).toBe('rose');
   });
 });

@@ -118,6 +118,13 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
           onClose={onClose}
           isDiscarded={tab.discarded}
         />
+        <button
+          onClick={onClose}
+          title="Cerrar esta pestaña en Chrome (no afecta fijadas)"
+          className="p-1 rounded text-content-muted hover:text-status-danger hover:bg-status-danger-subtle transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );

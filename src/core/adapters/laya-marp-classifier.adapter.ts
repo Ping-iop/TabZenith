@@ -19,15 +19,15 @@ const MARP_TAXONOMY: Record<MarpDomainTaxonomy, string[]> = {
 
 const DOMAIN_COLOR_MAP: Record<MarpDomainTaxonomy, ChromeGroupColor> = {
   code: 'blue',
-  research: 'purple',
-  web: 'green',
-  media: 'red',
+  research: 'indigo',
+  web: 'teal',
+  media: 'rose',
   data: 'cyan',
-  finance: 'yellow',
-  system: 'grey',
-  creative: 'pink',
+  finance: 'amber',
+  system: 'slate',
+  creative: 'violet',
   memory: 'purple',
-  gaming: 'orange',
+  gaming: 'emerald',
   general: 'grey',
 };
 

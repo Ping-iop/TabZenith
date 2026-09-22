@@ -6,6 +6,9 @@ import {
   Trash2,
   FolderPlus,
   Layers,
+  Globe,
+  FolderMinus,
+  XCircle,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
@@ -29,6 +32,8 @@ interface TabGroupListProps {
   onEditGroup: (group: TabGroup) => void;
   onDeleteGroup: (groupId: string, closeTabs: boolean) => void;
   onCreateEmptyGroup: () => void;
+  onGroupByTopic?: () => void;
+  onGroupByDomain?: () => void;
 }
 
 export const TabGroupList: React.FC<TabGroupListProps> = ({
@@ -43,6 +48,8 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   onEditGroup,
   onDeleteGroup,
   onCreateEmptyGroup,
+  onGroupByTopic,
+  onGroupByDomain,
 }) => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -72,19 +79,49 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Botón superior de crear grupo vacío */}
-      <div className="flex items-center justify-between">
+      {/* Barra de Acciones de Agrupación Superior */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
           Grupos y Pestañas Activas ({tabs.length})
         </h3>
-        <Button
-          size="sm"
-          variant="outline"
-          leftIcon={<FolderPlus className="w-3.5 h-3.5 text-brand-primary" />}
-          onClick={onCreateEmptyGroup}
-        >
-          Crear Nuevo Grupo
-        </Button>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {onGroupByTopic && (
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<Layers className="w-3.5 h-3.5 text-purple-400" />}
+              onClick={onGroupByTopic}
+              className="text-xs"
+              title="Agrupar automáticamente por categorías y temas de Laya Core"
+            >
+              Agrupar por Tema
+            </Button>
+          )}
+
+          {onGroupByDomain && (
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<Globe className="w-3.5 h-3.5 text-emerald-400" />}
+              onClick={onGroupByDomain}
+              className="text-xs"
+              title="Agrupar automáticamente por dominio web de origen"
+            >
+              Agrupar por Dominio
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<FolderPlus className="w-3.5 h-3.5 text-brand-primary" />}
+            onClick={onCreateEmptyGroup}
+            className="text-xs"
+          >
+            Nuevo Grupo
+          </Button>
+        </div>
       </div>
 
       {/* Grupos creados */}
@@ -138,10 +175,17 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 </button>
                 <button
                   onClick={() => onDeleteGroup(group.id, false)}
-                  title="Eliminar grupo (conservar pestañas abiertas)"
+                  title="Desagrupar (conservar pestañas abiertas en el navegador)"
+                  className="p-1.5 rounded hover:bg-surface-elevated text-content-muted hover:text-content-primary transition-colors"
+                >
+                  <FolderMinus className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => onDeleteGroup(group.id, true)}
+                  title="Cerrar todas las pestañas de este grupo en Chrome (no afecta fijadas)"
                   className="p-1.5 rounded hover:bg-status-danger-subtle text-content-muted hover:text-status-danger transition-colors"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <XCircle className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -182,7 +226,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
               Pestañas sin Agrupar ({ungroupedTabs.length})
             </span>
             <span className="text-xs text-content-muted">
-              Haz clic derecho o en los 3 puntos para organizarlas
+              Haz clic en "Agrupar por Tema" o "Agrupar por Dominio" para organizarlas
             </span>
           </div>
           <div className="p-2 space-y-1.5">

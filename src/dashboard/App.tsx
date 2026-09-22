@@ -70,11 +70,13 @@ export const DashboardApp: React.FC = () => {
   const {
     metrics,
     isClassifying,
+    isGrouping,
     actionFeedback,
     clearFeedback,
+    manualClassify,
+    manualGroup,
     freezeInactiveTabs,
     deduplicateTabs,
-    autoClassifySession,
     tabTaxonomyMap,
   } = useExecutiveDashboard();
 
@@ -272,11 +274,14 @@ export const DashboardApp: React.FC = () => {
             <ExecutiveKpiGrid metrics={metrics} isClassifying={isClassifying} />
 
             <ExecutiveActionsBar
+              onClassify={manualClassify}
+              onGroupByTopic={groupByTopic}
+              onGroupByDomain={groupByDomain}
               onFreezeInactive={freezeInactiveTabs}
               onDeduplicate={deduplicateTabs}
-              onAutoClassify={autoClassifySession}
               onStashSession={() => stashCurrentSession()}
               isClassifying={isClassifying}
+              isGrouping={isGrouping}
             />
 
             <ExecutiveDataGrid
@@ -306,6 +311,8 @@ export const DashboardApp: React.FC = () => {
             onEditGroup={handleOpenEditGroup}
             onDeleteGroup={deleteGroup}
             onCreateEmptyGroup={() => handleOpenCreateGroup()}
+            onGroupByTopic={groupByTopic}
+            onGroupByDomain={groupByDomain}
           />
         )}
 
@@ -328,7 +335,11 @@ export const DashboardApp: React.FC = () => {
           <SessionsView
             sessions={sessions}
             onRestore={restoreSession}
+            onRestoreGroup={restoreSpecificGroup}
+            onRestoreSelectedTabs={restoreSelectedTabs}
+            onRemoveTabFromSession={removeTabFromSession}
             onDelete={deleteSession}
+            onSessionUpdated={refreshSessions}
           />
         )}
       </main>

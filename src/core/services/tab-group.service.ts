@@ -2,6 +2,8 @@ import { IBrowserTabsPort } from '../ports/browser-tabs.port';
 import { ITabStoragePort } from '../ports/tab-storage.port';
 import { ITabClassifierPort } from '../ports/tab-classifier.port';
 import { SessionSnapshot } from '../domain/session.types';
+import { TabItem } from '../domain/tab.types';
+import { TabGroup } from '../domain/group.types';
 import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
 
 export class TabGroupService {
@@ -12,14 +14,15 @@ export class TabGroupService {
   ) {}
 
   /**
-   * Guarda todas las pestañas abiertas actuales en un Snapshot de sesión
-   * y opcionalmente las cierra en Chrome para recuperar RAM inmediatamente.
+   * Guarda todas las pestañas abiertas actuales en un Snapshot de sesión,
+   * organiza y clasifica automáticamente con IA/Laya al momento de guardar,
+   * y opcionalmente las cierra en Chrome respetando estrictamente las pestañas fijadas (pinned).
    */
   async stashAllTabs(sessionName?: string, closeAfterSave = false): Promise<SessionSnapshot> {
-    const tabs = await this.browserTabs.getOpenTabs();
-    const groups = await this.browserTabs.getTabGroups();
+    const rawTabs = await this.browserTabs.getOpenTabs();
+    const existingGroups = await this.browserTabs.getTabGroups();
 
-    if (tabs.length === 0) {
+    if (rawTabs.length === 0) {
       throw new Error('No hay pestañas abiertas para guardar.');
     }
 
@@ -32,33 +35,81 @@ export class TabGroupService {
         minute: '2-digit',
       })}`;
 
+    // 1. Clasificación automática con Laya Core / MARP al momento de guardar
+    const classifications = await this.classifier.classifyBatch(
+      rawTabs.map((t) => ({ title: t.title, url: t.url }))
+    );
+
+    // Mapear grupos existentes por ID
+    const groupMap = new Map<string, TabGroup>();
+    existingGroups.forEach((g) => groupMap.set(g.id, g));
+
+    // Para pestañas sin grupo previo, generar grupos semánticos automáticamente
+    const organizedTabs: TabItem[] = [];
+    const autoCreatedGroups = new Map<string, TabGroup>();
+
+    rawTabs.forEach((tab, index) => {
+      const classification = classifications[index];
+      let targetGroupId = tab.groupId;
+
+      // Si la pestaña no pertenecía a un grupo en Chrome, asignarla a un grupo clasificado por Laya
+      if (!targetGroupId || !groupMap.has(targetGroupId)) {
+        const catName = classification.suggestedGroupName;
+        let autoGroup = autoCreatedGroups.get(catName);
+        if (!autoGroup) {
+          autoGroup = {
+            id: `autogrp_${classification.primaryDomain}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            title: catName,
+            color: classification.suggestedColor,
+            collapsed: false,
+            createdAt: Date.now(),
+          };
+          autoCreatedGroups.set(catName, autoGroup);
+        }
+        targetGroupId = autoGroup.id;
+      }
+
+      organizedTabs.push({
+        ...tab,
+        groupId: targetGroupId,
+        tags: Array.from(new Set([...tab.tags, classification.primaryDomain])),
+      });
+    });
+
+    const allGroups = [
+      ...Array.from(groupMap.values()),
+      ...Array.from(autoCreatedGroups.values()),
+    ];
+
     const snapshot: SessionSnapshot = {
       id: `session_${Date.now()}`,
       name,
       createdAt: Date.now(),
-      tabCount: tabs.length,
-      windowCount: new Set(tabs.map((t) => t.windowId).filter(Boolean)).size || 1,
-      groups: [...groups],
-      tabs: [...tabs],
+      tabCount: organizedTabs.length,
+      windowCount: new Set(organizedTabs.map((t) => t.windowId).filter(Boolean)).size || 1,
+      groups: allGroups,
+      tabs: organizedTabs,
     };
 
     await this.storage.saveSession(snapshot);
 
+    // 2. Si se solicita cerrar pestañas, JAMÁS cerrar pestañas fijadas (pinned)
     if (closeAfterSave) {
-      const idsToClose = tabs.map((t) => t.id);
-      await this.browserTabs.closeTabs(idsToClose);
+      const nonPinnedTabIds = rawTabs.filter((t) => !t.pinned).map((t) => t.id);
+      if (nonPinnedTabIds.length > 0) {
+        await this.browserTabs.closeTabs(nonPinnedTabIds);
+      }
     }
 
     return snapshot;
   }
 
   /**
-   * Restaura una sesión guardada abriendo sus pestañas y recreando los grupos nativos de Chrome.
+   * Restaura una sesión completa en Chrome recreando grupos nativos.
    */
   async restoreSession(session: SessionSnapshot): Promise<void> {
     const groupMapping = new Map<string, string>(); // idAntiguo -> idNuevoChrome
 
-    // 1. Recrear grupos en Chrome si existen
     for (const group of session.groups) {
       const tabsForGroup = session.tabs.filter((t) => t.groupId === group.id);
       if (tabsForGroup.length === 0) continue;
@@ -76,7 +127,6 @@ export class TabGroupService {
       groupMapping.set(group.id, newGroupId);
     }
 
-    // 2. Abrir pestañas sin grupo
     const ungroupedTabs = session.tabs.filter(
       (t) => !t.groupId || !groupMapping.has(t.groupId)
     );
@@ -86,19 +136,70 @@ export class TabGroupService {
   }
 
   /**
-   * Ejecuta clasificación automática sobre pestañas abiertas usando el motor (Laya Core / MARP)
-   * y las agrupa automáticamente en Chrome por su dominio semántico.
+   * Restaura ÚNICAMENTE un grupo específico de una sesión archivada.
+   */
+  async restoreSpecificGroup(
+    group: TabGroup,
+    tabs: readonly TabItem[]
+  ): Promise<string> {
+    const createdTabIds: string[] = [];
+    for (const tab of tabs) {
+      const created = await this.browserTabs.createTab(tab.url, false);
+      createdTabIds.push(created.id);
+    }
+
+    if (createdTabIds.length === 0) return '';
+
+    return await this.browserTabs.groupTabs(createdTabIds, undefined, {
+      title: group.title,
+      color: group.color,
+    });
+  }
+
+  /**
+   * Restaura ÚNICAMENTE pestañas individuales seleccionadas.
+   */
+  async restoreSelectedTabs(tabs: readonly TabItem[]): Promise<void> {
+    for (const tab of tabs) {
+      await this.browserTabs.createTab(tab.url, false);
+    }
+  }
+
+  /**
+   * Elimina una pestaña específica de una sesión archivada en IndexedDB.
+   */
+  async removeTabFromSession(sessionId: string, tabId: string): Promise<SessionSnapshot | null> {
+    const sessions = await this.storage.getSessions();
+    const session = sessions.find((s) => s.id === sessionId);
+    if (!session) return null;
+
+    const updatedTabs = session.tabs.filter((t) => t.id !== tabId);
+    // Eliminar grupos que hayan quedado completamente vacíos
+    const activeGroupIds = new Set(updatedTabs.map((t) => t.groupId).filter(Boolean));
+    const updatedGroups = session.groups.filter((g) => activeGroupIds.has(g.id));
+
+    const updatedSession: SessionSnapshot = {
+      ...session,
+      tabs: updatedTabs,
+      groups: updatedGroups,
+      tabCount: updatedTabs.length,
+    };
+
+    await this.storage.saveSession(updatedSession);
+    return updatedSession;
+  }
+
+  /**
+   * Ejecuta auto-clasificación en vivo sobre las pestañas abiertas en Chrome.
    */
   async autoClassifyAndGroupOpenTabs(): Promise<{ groupedCount: number; categories: string[] }> {
     const tabs = await this.browserTabs.getOpenTabs();
     if (tabs.length === 0) return { groupedCount: 0, categories: [] };
 
-    // Clasificar en lote
     const classifications = await this.classifier.classifyBatch(
       tabs.map((t) => ({ title: t.title, url: t.url }))
     );
 
-    // Agrupar por categoría sugerida
     const groupsMap = new Map<string, { color: ChromeGroupColor; tabIds: string[] }>();
 
     tabs.forEach((tab, index) => {
@@ -112,7 +213,6 @@ export class TabGroupService {
       groupsMap.set(categoryTitle, existing);
     });
 
-    // Crear grupos nativos en Chrome
     const createdCategories: string[] = [];
     for (const [categoryTitle, data] of groupsMap.entries()) {
       if (data.tabIds.length > 0) {
@@ -131,8 +231,55 @@ export class TabGroupService {
   }
 
   /**
-   * Mueve una pestaña a un grupo existente o a uno nuevo.
+   * Opción Paralela 1: Agrupar por Tema / Tipo (utilizando Laya Core en CPU)
    */
+  async groupByTopic(): Promise<{ groupedCount: number; groupsCreated: number }> {
+    const res = await this.autoClassifyAndGroupOpenTabs();
+    return {
+      groupedCount: res.groupedCount,
+      groupsCreated: res.categories.length,
+    };
+  }
+
+  /**
+   * Opción Paralela 2: Agrupar por Dominio Web
+   */
+  async groupByDomain(): Promise<{ groupedCount: number; groupsCreated: number }> {
+    const tabs = await this.browserTabs.getOpenTabs();
+    if (tabs.length === 0) return { groupedCount: 0, groupsCreated: 0 };
+
+    const domainMap = new Map<string, string[]>();
+    tabs.forEach((tab) => {
+      const d = tab.domain || 'otros';
+      const existing = domainMap.get(d) || [];
+      existing.push(tab.id);
+      domainMap.set(d, existing);
+    });
+
+    const colors: ChromeGroupColor[] = [
+      'blue', 'green', 'purple', 'cyan', 'orange', 'yellow', 'red', 'pink', 'grey'
+    ];
+    let colorIndex = 0;
+    let createdCount = 0;
+
+    for (const [domain, tabIds] of domainMap.entries()) {
+      if (tabIds.length > 0) {
+        const color = colors[colorIndex % colors.length];
+        colorIndex++;
+        await this.browserTabs.groupTabs(tabIds, undefined, {
+          title: domain,
+          color,
+        });
+        createdCount++;
+      }
+    }
+
+    return {
+      groupedCount: tabs.length,
+      groupsCreated: createdCount,
+    };
+  }
+
   async moveTabToGroup(
     tabId: string,
     targetGroupId: string,
@@ -141,16 +288,10 @@ export class TabGroupService {
     await this.browserTabs.groupTabs([tabId], targetGroupId, newGroupInfo);
   }
 
-  /**
-   * Extrae una pestaña de su grupo.
-   */
   async ungroupTab(tabId: string): Promise<void> {
     await this.browserTabs.ungroupTabs([tabId]);
   }
 
-  /**
-   * Congela / Suspende pestañas para liberar memoria RAM.
-   */
   async suspendTabs(tabIds: readonly string[]): Promise<void> {
     await this.browserTabs.discardTabs(tabIds);
   }

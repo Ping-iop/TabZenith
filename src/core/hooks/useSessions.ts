@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { container } from '../di/container';
 import { SessionSnapshot } from '../domain/session.types';
+import { TabItem } from '../domain/tab.types';
+import { TabGroup } from '../domain/group.types';
 
 export function useSessions() {
   const [sessions, setSessions] = useState<readonly SessionSnapshot[]>([]);
@@ -24,20 +26,48 @@ export function useSessions() {
     fetchSessions();
   }, [fetchSessions]);
 
-  const stashCurrentSession = useCallback(async (name?: string, closeAfter = false) => {
-    const session = await container.tabGroupService.stashAllTabs(name, closeAfter);
-    await fetchSessions();
-    return session;
-  }, [fetchSessions]);
+  const stashCurrentSession = useCallback(
+    async (name?: string, closeAfter = false) => {
+      const session = await container.tabGroupService.stashAllTabs(name, closeAfter);
+      await fetchSessions();
+      return session;
+    },
+    [fetchSessions]
+  );
 
   const restoreSession = useCallback(async (session: SessionSnapshot) => {
     await container.tabGroupService.restoreSession(session);
   }, []);
 
-  const deleteSession = useCallback(async (sessionId: string) => {
-    await container.storage.deleteSession(sessionId);
-    await fetchSessions();
-  }, [fetchSessions]);
+  const restoreSpecificGroup = useCallback(
+    async (group: TabGroup, tabs: readonly TabItem[]) => {
+      await container.tabGroupService.restoreSpecificGroup(group, tabs);
+    },
+    []
+  );
+
+  const restoreSelectedTabs = useCallback(
+    async (tabs: readonly TabItem[]) => {
+      await container.tabGroupService.restoreSelectedTabs(tabs);
+    },
+    []
+  );
+
+  const removeTabFromSession = useCallback(
+    async (sessionId: string, tabId: string) => {
+      await container.tabGroupService.removeTabFromSession(sessionId, tabId);
+      await fetchSessions();
+    },
+    [fetchSessions]
+  );
+
+  const deleteSession = useCallback(
+    async (sessionId: string) => {
+      await container.storage.deleteSession(sessionId);
+      await fetchSessions();
+    },
+    [fetchSessions]
+  );
 
   return {
     sessions,
@@ -46,6 +76,9 @@ export function useSessions() {
     refresh: fetchSessions,
     stashCurrentSession,
     restoreSession,
+    restoreSpecificGroup,
+    restoreSelectedTabs,
+    removeTabFromSession,
     deleteSession,
   };
 }
