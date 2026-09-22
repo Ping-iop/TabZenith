@@ -123,6 +123,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.emptyGroup': 'Grupo vacío',
     'groups.sortAlpha': 'Ordenar A-Z',
     'groups.sortDefault': 'Orden de Chrome',
+    'groups.collapseAll': 'Colapsar todos',
+    'groups.expandAll': 'Expandir todos',
     'groups.memoryUsage': 'RAM estimada',
     'groups.others': 'Otros',
 
@@ -303,6 +305,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.emptyGroup': 'Empty group',
     'groups.sortAlpha': 'Sort A-Z',
     'groups.sortDefault': 'Chrome Order',
+    'groups.collapseAll': 'Collapse all',
+    'groups.expandAll': 'Expand all',
     'groups.memoryUsage': 'Est. RAM',
     'groups.others': 'Others',
 
@@ -483,6 +487,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.emptyGroup': 'Пустая группа',
     'groups.sortAlpha': 'По алфавиту А-Я',
     'groups.sortDefault': 'Порядок Chrome',
+    'groups.collapseAll': 'Свернуть все',
+    'groups.expandAll': 'Развернуть все',
     'groups.memoryUsage': 'Память RAM',
     'groups.others': 'Другие',
 
@@ -663,6 +669,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.emptyGroup': '空分组',
     'groups.sortAlpha': '按名称 A-Z 排序',
     'groups.sortDefault': '浏览器原始顺序',
+    'groups.collapseAll': '全部折叠',
+    'groups.expandAll': '全部展开',
     'groups.memoryUsage': '预估内存',
     'groups.others': '其他',
 

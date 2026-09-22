@@ -20,7 +20,7 @@ interface DomainBadgeProps {
   className?: string;
 }
 
-const DOMAIN_CONFIG: Record<
+export const DOMAIN_CONFIG: Record<
   MarpDomainTaxonomy,
   { label: string; icon: React.ReactNode; colorClasses: string }
 > = {

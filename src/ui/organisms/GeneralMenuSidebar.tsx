@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Mail,
 } from 'lucide-react';
 import { useI18n } from '@/core/i18n/I18nContext';
 
@@ -29,6 +30,7 @@ interface GeneralMenuSidebarProps {
   readonly activeView: DashboardViewType;
   readonly onViewChange: (view: DashboardViewType) => void;
   readonly onOpenDocs: () => void;
+  readonly onOpenGmailBackup?: () => void;
   readonly isChromeEnv: boolean;
   readonly isLayaConnected: boolean | null;
   readonly counts: {
@@ -47,6 +49,7 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
   activeView,
   onViewChange,
   onOpenDocs,
+  onOpenGmailBackup,
   isChromeEnv,
   isLayaConnected,
   counts,
@@ -173,6 +176,23 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
                   : t('header.laya.heuristic')}
               </span>
             </div>
+
+            {onOpenGmailBackup && (
+              <button
+                type="button"
+                onClick={onOpenGmailBackup}
+                className="w-full mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/15 via-amber-500/10 to-surface-subtle border border-rose-500/30 text-rose-300 hover:text-rose-200 hover:border-rose-500/50 transition-all text-xs font-semibold cursor-pointer shadow-sm"
+                title="Sincronizar y respaldar todo tu historial con tu cuenta de Gmail"
+              >
+                <span className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Respaldo con Gmail</span>
+                </span>
+                <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  Cloud
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -217,24 +237,27 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
               </button>
             );
           })}
-        </nav>
-
-        {/* Footer del Menú: Botón de Documentación y Versión */}
-        <div className="p-4 border-t border-surface-border bg-surface-subtle/30 space-y-2.5">
+          {/* Botón de Documentación: Siempre el último de la lista del menú */}
           <button
             onClick={() => {
               onOpenDocs();
               if (onCloseMobile) onCloseMobile();
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-subtle hover:bg-surface-elevated text-brand-primary border border-brand-primary/30 text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-brand-primary hover:bg-brand-primary/10 border border-brand-primary/30 transition-all text-left cursor-pointer mt-2"
           >
-            <BookOpen className="w-4 h-4" />
-            <span>{t('nav.documentation')}</span>
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-4 h-4 text-brand-primary shrink-0" />
+              <span>{t('nav.documentation')}</span>
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-primary/20 text-brand-primary">
+              Guía
+            </span>
           </button>
+        </nav>
 
-          <div className="text-center text-[11px] text-content-muted">
-            TabZenith v1.0.5 • CPU First AI
-          </div>
+        {/* Footer del Menú */}
+        <div className="p-3 border-t border-surface-border bg-surface-subtle/30 text-center text-[11px] text-content-muted">
+          TabZenith v1.0.6 • CPU First AI
         </div>
       </aside>
     </>

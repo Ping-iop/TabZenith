@@ -123,8 +123,10 @@ export type TranslationKey =
   | 'groups.suspend'
   | 'groups.close'
   | 'groups.emptyGroup'
-  | 'groups.sortAlpha'
   | 'groups.sortDefault'
+  | 'groups.sortAlpha'
+  | 'groups.collapseAll'
+  | 'groups.expandAll'
   | 'groups.memoryUsage'
   | 'groups.others'
   // Modals

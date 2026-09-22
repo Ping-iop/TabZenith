@@ -10,6 +10,8 @@ import {
   XCircle,
   ArrowUpDown,
   HardDrive,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
@@ -82,6 +84,16 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
     });
   };
 
+  const areAllCollapsed = groups.length > 0 && groups.every((g) => collapsedGroups.has(g.id));
+
+  const toggleCollapseAll = () => {
+    if (areAllCollapsed) {
+      setCollapsedGroups(new Set());
+    } else {
+      setCollapsedGroups(new Set(groups.map((g) => g.id)));
+    }
+  };
+
   if (tabs.length === 0) {
     return (
       <EmptyState
@@ -109,6 +121,26 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
         </h3>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Botón Colapsar / Expandir Todos los Grupos */}
+          {groups.length > 0 && (
+            <Button
+              size="sm"
+              variant={areAllCollapsed ? 'primary' : 'outline'}
+              leftIcon={
+                areAllCollapsed ? (
+                  <ChevronsUpDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronsDownUp className="w-3.5 h-3.5" />
+                )
+              }
+              onClick={toggleCollapseAll}
+              className="text-xs"
+              title={areAllCollapsed ? t('groups.expandAll') : t('groups.collapseAll')}
+            >
+              {areAllCollapsed ? t('groups.expandAll') : t('groups.collapseAll')}
+            </Button>
+          )}
+
           {/* Botón de Orden Alfabético A-Z */}
           <Button
             size="sm"
@@ -176,7 +208,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
           <Card
             key={group.id}
             className={cn(
-              'border-l-4 transition-all',
+              'border-l-4 transition-all overflow-visible',
               colorStyle.border,
               'bg-surface-card/90'
             )}
@@ -276,7 +308,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
 
       {/* Pestañas sueltas (sin grupo) */}
       {ungroupedTabs.length > 0 && (
-        <Card className="border-l-4 border-slate-600 bg-surface-card/60">
+        <Card className="border-l-4 border-slate-600 bg-surface-card/60 overflow-visible">
           <div className="p-3 border-b border-surface-border/50 bg-surface-subtle/30 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-content-secondary">

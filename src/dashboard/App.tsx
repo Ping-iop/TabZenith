@@ -15,6 +15,7 @@ import {
   Pin,
   Copy,
   Menu,
+  Mail,
 } from 'lucide-react';
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
@@ -25,6 +26,7 @@ import { useExecutiveDashboard } from '@/core/hooks/useExecutiveDashboard';
 import { useSmartSearch } from '@/core/hooks/useSmartSearch';
 import { useI18n } from '@/core/i18n/I18nContext';
 import { LanguageSelector } from '@/ui/molecules/LanguageSelector';
+import { AnimatedLogo } from '@/ui/molecules/AnimatedLogo';
 
 import { ExecutiveKpiGrid } from '@/ui/organisms/ExecutiveKpiGrid';
 import { ExecutiveActionsBar } from '@/ui/organisms/ExecutiveActionsBar';
@@ -37,6 +39,7 @@ import { SessionsView } from '@/ui/organisms/SessionsView';
 import { ClosedTabsView } from '@/ui/organisms/ClosedTabsView';
 import { GeneralMenuSidebar, DashboardViewType } from '@/ui/organisms/GeneralMenuSidebar';
 import { DocumentationModal } from '@/ui/organisms/DocumentationModal';
+import { GmailBackupModal } from '@/ui/organisms/GmailBackupModal';
 import { GroupManagementModal } from '@/ui/organisms/GroupManagementModal';
 import { SearchResultsView } from '@/ui/organisms/SearchResultsView';
 
@@ -49,12 +52,24 @@ export const DashboardApp: React.FC = () => {
   const { t } = useI18n();
   const [activeView, setActiveView] = useState<DashboardViewType>('command_center');
   const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [isGmailBackupOpen, setIsGmailBackupOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLayaConnected, setIsLayaConnected] = useState<boolean | null>(null);
   const [selectedDomainFilters, setSelectedDomainFilters] = useState<string[]>([]);
 
   // Hooks de lógica desacoplada
-  const { favorites, favoriteCount, toggleFavorite, isFavorite } = useFavorites();
+  const {
+    favorites,
+    favoriteCount,
+    entries: favoriteEntries,
+    folders: inspirationFolders,
+    toggleFavorite,
+    isFavorite,
+    setTabFolder,
+    createFolder,
+    deleteFolder,
+    renameFolder,
+  } = useFavorites();
   const {
     closedTabs,
     recordClosedTabs,
@@ -148,8 +163,14 @@ export const DashboardApp: React.FC = () => {
 
   const displayedTabs = useMemo(() => {
     if (selectedDomainFilters.length === 0) return tabs;
-    return tabs.filter((t) => selectedDomainFilters.includes(t.domain));
-  }, [tabs, selectedDomainFilters]);
+    return tabs.filter((t) => {
+      const taxonomy = tabTaxonomyMap.get(t.id) || 'general';
+      return (
+        selectedDomainFilters.includes(taxonomy) ||
+        selectedDomainFilters.includes(t.domain)
+      );
+    });
+  }, [tabs, selectedDomainFilters, tabTaxonomyMap]);
 
   const pinnedTabs = useMemo(() => {
     return tabs.filter((t) => t.pinned);
@@ -236,11 +257,14 @@ export const DashboardApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-base text-content-primary flex flex-col">
-      {/* Barra de Navegación Superior: Únicamente Buscador y Selector de Idioma */}
+      {/* Barra de Navegación Superior: Logotipo Animado, Buscador y Controles */}
       <header className="sticky top-0 z-30 bg-surface-card/90 backdrop-blur-md border-b border-surface-border px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          {/* Logotipo Animado con Framer Motion */}
+          <AnimatedLogo onClick={() => setActiveView('command_center')} />
+
           {/* Buscador Inteligente Central */}
-          <div className="flex-1 max-w-2xl relative">
+          <div className="flex-1 max-w-xl relative">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -258,8 +282,18 @@ export const DashboardApp: React.FC = () => {
             )}
           </div>
 
-          {/* Selector de Idioma y Menú Móvil */}
+          {/* Selector de Idioma, Respaldo Gmail y Menú Móvil */}
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsGmailBackupOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-transparent hover:from-rose-500/20 hover:to-amber-500/20 text-xs text-rose-300 hover:text-rose-200 border border-rose-500/30 transition-all cursor-pointer font-medium shadow-sm"
+              title="Guardar o sincronizar todo el historial con una cuenta de Gmail"
+            >
+              <Mail className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden sm:inline font-semibold">Respaldo Gmail</span>
+            </button>
+
             <LanguageSelector />
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -410,12 +444,18 @@ export const DashboardApp: React.FC = () => {
           />
         )}
 
-        {/* Vista 3: Pestañas Favoritas */}
+        {/* Vista 3: Pestañas Favoritas & Biblioteca de Inspiración */}
         {activeView === 'favorites' && (
           <FavoritesView
             openTabs={tabs}
             favoriteUrls={favorites}
+            entries={favoriteEntries}
+            folders={inspirationFolders}
             onToggleFavorite={toggleFavorite}
+            onSetTabFolder={setTabFolder}
+            onCreateFolder={createFolder}
+            onDeleteFolder={deleteFolder}
+            onRenameFolder={renameFolder}
             onCloseTab={handleCloseSingleTab}
             onSuspendTab={(tabId) => suspendTabs([tabId])}
           />
@@ -475,6 +515,7 @@ export const DashboardApp: React.FC = () => {
         activeView={activeView}
         onViewChange={setActiveView}
         onOpenDocs={() => setIsDocsOpen(true)}
+        onOpenGmailBackup={() => setIsGmailBackupOpen(true)}
         isChromeEnv={isChromeEnv}
         isLayaConnected={isLayaConnected}
         counts={{
@@ -504,6 +545,18 @@ export const DashboardApp: React.FC = () => {
     <DocumentationModal
       isOpen={isDocsOpen}
       onClose={() => setIsDocsOpen(false)}
+    />
+
+    {/* Modal de Respaldo y Sincronización Gmail */}
+    <GmailBackupModal
+      isOpen={isGmailBackupOpen}
+      onClose={() => setIsGmailBackupOpen(false)}
+      sessions={sessions}
+      closedTabs={closedTabs}
+      favorites={favorites}
+      inboxLinks={inboxLinks}
+      groups={groups}
+      tabs={tabs}
     />
   </div>
   );
