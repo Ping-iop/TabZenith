@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Star,
   Pin,
+  Copy,
 } from 'lucide-react';
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
@@ -167,6 +168,41 @@ export const DashboardApp: React.FC = () => {
   };
 
   const isChromeEnv = typeof chrome !== 'undefined' && Boolean(chrome.tabs?.query);
+
+  const EXTENSION_ID = 'oigehliembpnijhhigpeofedoilbgaaj';
+  const DASHBOARD_CHROME_URL = `chrome-extension://${EXTENSION_ID}/dashboard.html`;
+  const [copiedExtensionUrl, setCopiedExtensionUrl] = useState(false);
+  const [openExtensionStatus, setOpenExtensionStatus] = useState<string | null>(null);
+
+  const handleCopyExtensionUrl = () => {
+    navigator.clipboard.writeText(DASHBOARD_CHROME_URL).then(() => {
+      setCopiedExtensionUrl(true);
+      setTimeout(() => setCopiedExtensionUrl(false), 3000);
+    }).catch(() => {});
+  };
+
+  const handleOpenRealExtension = () => {
+    setOpenExtensionStatus(null);
+    // Intentar abrirlo a través de la mensajería del Service Worker (externally_connectable)
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      try {
+        chrome.runtime.sendMessage(EXTENSION_ID, { action: 'open_dashboard' }, (response) => {
+          if (chrome.runtime.lastError || !response?.success) {
+            handleCopyExtensionUrl();
+            setOpenExtensionStatus('¡URL copiada! Pégala en la barra de Chrome o ábrelo desde el popup.');
+          } else {
+            setOpenExtensionStatus('¡Abriendo pestaña nativa en Chrome!');
+            setTimeout(() => setOpenExtensionStatus(null), 3000);
+          }
+        });
+        return;
+      } catch {
+        // Fallback
+      }
+    }
+    handleCopyExtensionUrl();
+    setOpenExtensionStatus('¡URL copiada! Pégala en una pestaña nueva de Chrome.');
+  };
 
   return (
     <div className="min-h-screen bg-surface-base text-content-primary">
@@ -324,16 +360,40 @@ export const DashboardApp: React.FC = () => {
                 <p className="text-[11px] text-amber-300/70 mt-1">{t('mockBanner.shortcutHint')}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="chrome-extension://oigehliembpnijhhigpeofedoilbgaaj/dashboard.html"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-primary text-content-primary text-xs font-semibold hover:bg-brand-primary/90 transition-colors shadow-sm"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>{t('mockBanner.btnOpenReal')}</span>
-              </a>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenRealExtension}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-primary text-content-primary text-xs font-semibold hover:bg-brand-primary/90 transition-colors shadow-sm cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>{t('mockBanner.btnOpenReal')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyExtensionUrl}
+                  title="Copiar URL directa de la extensión"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs text-amber-100 transition-colors cursor-pointer"
+                >
+                  {copiedExtensionUrl ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-status-success" />
+                      <span className="text-status-success font-medium">¡Copiada!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Copiar URL</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              {openExtensionStatus && (
+                <span className="text-[11px] text-amber-200 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30 animate-in fade-in">
+                  {openExtensionStatus}
+                </span>
+              )}
             </div>
           </div>
         )}

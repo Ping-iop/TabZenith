@@ -39,3 +39,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
   }
 });
+
+// Permitir peticiones seguras desde el entorno web local (ej. http://127.0.0.1:5173 o localhost)
+chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
+  if (message?.action === 'open_dashboard' || message?.action === 'tabflow_open_dashboard') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+    sendResponse({ success: true });
+  }
+});
+
