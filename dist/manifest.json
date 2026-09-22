@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TabZenith - Gestor Inteligente & Dashboard Gerencial AI",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TabZenith: Guarda, agrupa, clasifica con Laya Core en CPU y congela pestañas para optimizar RAM con panel de curaduría de enlaces.",
   "permissions": [
     "tabs",

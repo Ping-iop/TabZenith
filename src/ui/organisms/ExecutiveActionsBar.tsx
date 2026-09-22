@@ -7,6 +7,7 @@ import {
   Globe,
   BookmarkPlus,
 } from 'lucide-react';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { Button } from '../atoms/Button';
 import { cn } from '../utils/cn';
 
@@ -33,6 +34,8 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
   isGrouping = false,
   className,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div
       className={cn(
@@ -40,10 +43,6 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         className
       )}
     >
-      <span className="text-xs font-semibold text-content-secondary uppercase tracking-wider mr-1">
-        Acciones:
-      </span>
-
       {/* Botón: Clasificar con IA / Laya */}
       <Button
         size="sm"
@@ -51,15 +50,12 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         leftIcon={<Sparkles className="w-3.5 h-3.5 text-blue-300" />}
         onClick={onClassify}
         isLoading={isClassifying}
-        title="Clasifica semánticamente todas las pestañas abiertas usando Laya Core en CPU"
+        title="Laya Core CPU"
       >
-        Clasificar (Laya)
+        {t('action.classifyLaya')}
       </Button>
 
       <div className="h-4 w-px bg-surface-border mx-1" />
-
-      {/* Opciones Paralelas de Agrupación */}
-      <span className="text-xs font-semibold text-content-muted">Agrupar:</span>
 
       {/* Opción 1: Agrupar por Tema / Tipo */}
       <Button
@@ -69,9 +65,8 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         onClick={onGroupByTopic}
         isLoading={isGrouping}
         className="hover:border-purple-500/50"
-        title="Agrupa las pestañas por Tema o Categoría Semántica (Código, Investigación, Multimedia, etc.)"
       >
-        Por Tema / Tipo
+        {t('action.groupByTopic')}
       </Button>
 
       {/* Opción 2: Agrupar por Dominio */}
@@ -82,9 +77,8 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         onClick={onGroupByDomain}
         isLoading={isGrouping}
         className="hover:border-emerald-500/50"
-        title="Agrupa las pestañas según su dominio web de origen (github.com, youtube.com, etc.)"
       >
-        Por Dominio
+        {t('action.groupByDomain')}
       </Button>
 
       <div className="h-4 w-px bg-surface-border mx-1" />
@@ -95,9 +89,8 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         variant="secondary"
         leftIcon={<Snowflake className="w-3.5 h-3.5 text-cyan-400" />}
         onClick={onFreezeInactive}
-        title="Suspende pestañas inactivas para liberar RAM (respeta fijadas)"
       >
-        Congelar Inactivas
+        {t('action.freezeInactive')}
       </Button>
 
       {/* Botón: Deduplicar */}
@@ -106,9 +99,8 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
         variant="secondary"
         leftIcon={<CopySlash className="w-3.5 h-3.5 text-amber-400" />}
         onClick={onDeduplicate}
-        title="Detecta URLs repetidas y cierra copias duplicadas"
       >
-        Deduplicar
+        {t('action.deduplicate')}
       </Button>
 
       {/* Botón: Guardar Todo (Stash) */}
@@ -119,11 +111,11 @@ export const ExecutiveActionsBar: React.FC<ExecutiveActionsBarProps> = ({
           leftIcon={<BookmarkPlus className="w-3.5 h-3.5 text-emerald-400" />}
           onClick={onStashSession}
           className="border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300 font-semibold"
-          title="Guarda todas las pestañas en un snapshot histórico organizado"
         >
-          Guardar Todo (Stash)
+          {t('action.saveAllStash')}
         </Button>
       </div>
     </div>
   );
 };
+

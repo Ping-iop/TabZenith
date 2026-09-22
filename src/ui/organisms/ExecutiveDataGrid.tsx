@@ -9,6 +9,7 @@ import {
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { DomainBadge } from '../molecules/DomainBadge';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
@@ -32,6 +33,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
   onBatchClose,
   onBatchMoveToGroup,
 }) => {
+  const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterText, setFilterText] = useState('');
   const [selectedTargetGroup, setSelectedTargetGroup] = useState<string>('');
@@ -97,12 +99,12 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
         <Input
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          placeholder="Filtrar por título, URL o dominio..."
+          placeholder={t('action.filterPlaceholder')}
           leftIcon={<Search className="w-4 h-4" />}
           className="max-w-md bg-surface-card"
         />
         <span className="text-xs text-content-secondary font-medium">
-          Mostrando {filteredTabs.length} de {tabs.length} pestañas
+          {t('action.showingTabs')} {filteredTabs.length} / {tabs.length}
         </span>
       </div>
 
@@ -195,18 +197,18 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                   className="w-4 h-4 rounded border-surface-border text-brand-primary focus:ring-brand-primary bg-surface-card"
                 />
               </th>
-              <th className="p-3">Título y URL</th>
-              <th className="p-3">Dominio</th>
-              <th className="p-3">Categoría (Laya)</th>
-              <th className="p-3">Grupo</th>
-              <th className="p-3">Estado RAM</th>
+              <th className="p-3">{t('grid.colTitle')}</th>
+              <th className="p-3">{t('grid.colDomain')}</th>
+              <th className="p-3">{t('grid.colCategory')}</th>
+              <th className="p-3">{t('grid.colGroup')}</th>
+              <th className="p-3">{t('grid.colRam')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-border">
             {filteredTabs.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-content-muted">
-                  No se encontraron pestañas con el filtro actual.
+                  {t('action.filterPlaceholder')}
                 </td>
               </tr>
             ) : (
@@ -232,7 +234,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                         className="w-4 h-4 rounded border-surface-border text-brand-primary focus:ring-brand-primary bg-surface-card"
                       />
                     </td>
-                    <td className="p-3 max-w-sm">
+                    <td className="p-3 max-w-xs md:max-w-md">
                       <a
                         href={tab.url}
                         target="_blank"
@@ -256,19 +258,19 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                           <span>{group.title}</span>
                         </span>
                       ) : (
-                        <span className="text-content-muted text-[11px]">Sin grupo</span>
+                        <span className="text-content-muted text-[11px]">{t('grid.noGroup')}</span>
                       )}
                     </td>
                     <td className="p-3">
                       {tab.discarded ? (
                         <span className="inline-flex items-center gap-1 text-cyan-400">
                           <Snowflake className="w-3.5 h-3.5" />
-                          <span>Congelada</span>
+                          <span>{t('grid.statusFrozen')}</span>
                         </span>
                       ) : tab.active ? (
-                        <span className="text-emerald-400 font-medium">Activa en uso</span>
+                        <span className="text-emerald-400 font-medium">{t('grid.statusActive')}</span>
                       ) : (
-                        <span className="text-content-secondary">En memoria RAM</span>
+                        <span className="text-content-secondary">{t('grid.statusInRam')}</span>
                       )}
                     </td>
                   </tr>

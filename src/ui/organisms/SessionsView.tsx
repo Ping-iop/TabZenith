@@ -23,6 +23,7 @@ import { Input } from '../atoms/Input';
 import { Card } from '../atoms/Card';
 import { EmptyState } from '../atoms/EmptyState';
 import { container } from '@/core/di/container';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { cn } from '../utils/cn';
 
 interface SessionsViewProps {
@@ -44,11 +45,48 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
   onDelete,
   onSessionUpdated,
 }) => {
+  const { t } = useI18n();
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedTabIds, setSelectedTabIds] = useState<Set<string>>(new Set());
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [isClassifyingSession, setIsClassifyingSession] = useState(false);
+
+  const handleExportBackup = () => {
+    if (sessions.length === 0) return;
+    const json = JSON.stringify(sessions, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tabzenith_sesiones_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const raw = event.target?.result as string;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          for (const s of parsed) {
+            if (s.id && s.tabs) {
+              await container.storage.saveSession(s);
+            }
+          }
+          onSessionUpdated?.();
+        }
+      } catch (err) {
+        console.error('Error importando backup de sesiones:', err);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const formatDate = (epoch: number) => {
     return new Date(epoch).toLocaleDateString('es-ES', {
@@ -141,23 +179,73 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
 
   if (sessions.length === 0) {
     return (
-      <EmptyState
-        icon={<History className="w-8 h-8" />}
-        title="No hay sesiones guardadas"
-        description="Usa el botón 'Guardar Todo (Stash)' en el panel superior para archivar tus pestañas actuales y liberar memoria."
-      />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
+            {t('session.title')} (0)
+          </h3>
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportBackup}
+                className="hidden"
+              />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border-default hover:bg-surface-elevated text-xs text-content-secondary hover:text-content-primary font-medium transition-colors">
+                <FolderInput className="w-3.5 h-3.5 text-blue-400" />
+                Importar Backup JSON
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <EmptyState
+          icon={<History className="w-8 h-8" />}
+          title={t('session.empty')}
+          description={t('session.desc')}
+        />
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
-          Sesiones Archivadas en Historial ({sessions.length})
-        </h3>
-        <span className="text-xs text-content-muted">
-          Haz clic en cualquier sesión para inspeccionar, clasificar o restaurar pestañas individuales
-        </span>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
+            {t('session.title')} ({sessions.length})
+          </h3>
+          <span className="text-xs text-content-muted">
+            {t('session.desc')}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<Copy className="w-3.5 h-3.5 text-emerald-400" />}
+            onClick={handleExportBackup}
+            title="Exportar archivo JSON con todas las sesiones"
+            className="text-xs border-slate-700 hover:bg-slate-800"
+          >
+            Exportar JSON
+          </Button>
+
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportBackup}
+              className="hidden"
+            />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-xs text-content-secondary hover:text-content-primary font-medium transition-colors">
+              <FolderInput className="w-3.5 h-3.5 text-blue-400" />
+              Importar JSON
+            </span>
+          </label>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -221,7 +309,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                         {session.name}
                       </h4>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-surface-elevated text-brand-primary font-semibold border border-brand-border">
-                        {session.tabCount} pestañas
+                        {session.tabCount} {t('session.tabCount')}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-content-muted mt-0.5">
@@ -231,7 +319,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                       </span>
                       <span>•</span>
                       <span>
-                        {session.groups.length} {session.groups.length === 1 ? 'grupo' : 'grupos'}
+                        {session.groups.length} {t('session.groupCount')}
                       </span>
                     </div>
                   </div>
@@ -245,7 +333,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                     onClick={() => toggleExpand(session.id)}
                     className="text-xs"
                   >
-                    {isExpanded ? 'Ocultar Pestañas' : 'Explorar Pestañas'}
+                    {isExpanded ? '▲' : '▼'}
                   </Button>
 
                   <Button
@@ -253,15 +341,14 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                     variant="primary"
                     leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                     onClick={() => onRestore(session)}
-                    title="Restaurar todas las pestañas y grupos en Chrome"
                     className="text-xs"
                   >
-                    Restaurar Todo
+                    {t('session.restoreAll')}
                   </Button>
 
                   <button
                     onClick={() => onDelete(session.id)}
-                    title="Eliminar sesión del historial"
+                    title={t('session.delete')}
                     className="p-2 rounded text-content-muted hover:text-status-danger hover:bg-status-danger-subtle transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />

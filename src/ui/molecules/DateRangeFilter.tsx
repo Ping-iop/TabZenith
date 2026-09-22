@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Filter } from 'lucide-react';
 import { DateRangePreset, DateRangeFilterState } from '@/core/domain/inbox.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { Button } from '../atoms/Button';
 import { cn } from '../utils/cn';
 
@@ -10,20 +11,20 @@ interface DateRangeFilterProps {
   className?: string;
 }
 
-const PRESETS: { id: DateRangePreset; label: string }[] = [
-  { id: 'all', label: 'Todos' },
-  { id: 'today', label: 'Hoy' },
-  { id: 'yesterday', label: 'Ayer' },
-  { id: 'last7days', label: 'Últimos 7 días' },
-  { id: 'last30days', label: 'Últimos 30 días' },
-  { id: 'custom', label: 'Personalizado' },
-];
-
 export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   filter,
   onChange,
   className,
 }) => {
+  const { t } = useI18n();
+
+  const presets: { id: DateRangePreset; label: string }[] = [
+    { id: 'all', label: t('inbox.filterAll') },
+    { id: 'today', label: t('inbox.filterToday') },
+    { id: 'last7days', label: t('inbox.filterWeek') },
+    { id: 'last30days', label: t('inbox.filterMonth') },
+    { id: 'custom', label: t('inbox.filterCustom') },
+  ];
   const handlePresetClick = (preset: DateRangePreset) => {
     if (preset === 'custom') {
       onChange({
@@ -60,7 +61,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
           <Filter className="w-3.5 h-3.5" />
           <span>Rango:</span>
         </span>
-        {PRESETS.map((p) => {
+        {presets.map((p) => {
           const isActive = filter.preset === p.id;
           return (
             <button

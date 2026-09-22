@@ -27,15 +27,95 @@ export class DexieStorageAdapter implements ITabStoragePort {
   }
 
   async saveSession(session: SessionSnapshot): Promise<void> {
+    // 1. Guardar en IndexedDB (Dexie)
     await this.db.sessions.put(session);
+
+    // 2. Respaldo secundario en chrome.storage.local (si es extensión)
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get(['tabzenith_backup_sessions']);
+        const existing: SessionSnapshot[] = (res.tabzenith_backup_sessions as SessionSnapshot[]) || [];
+        const updated = [session, ...existing.filter((s) => s.id !== session.id)].slice(0, 50);
+        await chrome.storage.local.set({ tabzenith_backup_sessions: updated });
+      } catch (err) {
+        console.warn('[TabZenith] Error respaldando sesión en chrome.storage:', err);
+      }
+    } else {
+      // Respaldo en localStorage si es entorno web
+      try {
+        const raw = localStorage.getItem('tabzenith_backup_sessions');
+        const existing: SessionSnapshot[] = raw ? JSON.parse(raw) : [];
+        const updated = [session, ...existing.filter((s) => s.id !== session.id)].slice(0, 30);
+        localStorage.setItem('tabzenith_backup_sessions', JSON.stringify(updated));
+      } catch {
+        // Ignorar límites de localStorage
+      }
+    }
   }
 
   async getSessions(): Promise<readonly SessionSnapshot[]> {
-    return await this.db.sessions.orderBy('createdAt').reverse().toArray();
+    const list = await this.db.sessions.orderBy('createdAt').reverse().toArray();
+
+    // Auto-recuperación si IndexedDB quedó vacío tras una actualización
+    if (list.length === 0) {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        try {
+          const res = await chrome.storage.local.get(['tabzenith_backup_sessions']);
+          const backup: SessionSnapshot[] = (res.tabzenith_backup_sessions as SessionSnapshot[]) || [];
+          if (backup.length > 0) {
+            for (const s of backup) {
+              await this.db.sessions.put(s);
+            }
+            return backup;
+          }
+        } catch (err) {
+          console.warn('[TabZenith] Error recuperando backup de sesiones en chrome.storage:', err);
+        }
+      } else {
+        try {
+          const raw = localStorage.getItem('tabzenith_backup_sessions');
+          if (raw) {
+            const backup: SessionSnapshot[] = JSON.parse(raw);
+            if (backup.length > 0) {
+              for (const s of backup) {
+                await this.db.sessions.put(s);
+              }
+              return backup;
+            }
+          }
+        } catch {
+          // Ignorar fallos de recuperación local
+        }
+      }
+    }
+
+    return list;
   }
 
   async deleteSession(sessionId: string): Promise<void> {
     await this.db.sessions.delete(sessionId);
+
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get(['tabzenith_backup_sessions']);
+        const existing: SessionSnapshot[] = (res.tabzenith_backup_sessions as SessionSnapshot[]) || [];
+        const filtered = existing.filter((s) => s.id !== sessionId);
+        await chrome.storage.local.set({ tabzenith_backup_sessions: filtered });
+      } catch (err) {
+        console.warn('[TabZenith] Error eliminando sesión de backup:', err);
+      }
+    } else {
+      try {
+        const raw = localStorage.getItem('tabzenith_backup_sessions');
+        if (raw) {
+          const existing: SessionSnapshot[] = JSON.parse(raw);
+          const filtered = existing.filter((s) => s.id !== sessionId);
+          localStorage.setItem('tabzenith_backup_sessions', JSON.stringify(filtered));
+        }
+      } catch {
+        // Ignorar
+      }
+    }
   }
 
   async saveCustomGroup(group: TabGroup): Promise<void> {

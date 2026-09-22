@@ -11,11 +11,14 @@ import {
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
 import { useInbox } from '@/core/hooks/useInbox';
+import { useI18n } from '@/core/i18n/I18nContext';
+import { LanguageSelector } from '@/ui/molecules/LanguageSelector';
 import { Button } from '@/ui/atoms/Button';
 import { Input } from '@/ui/atoms/Input';
 import { Card } from '@/ui/atoms/Card';
 
 export const PopupApp: React.FC = () => {
+  const { t } = useI18n();
   const { tabs, suspendTabs } = useTabs();
   const { stashCurrentSession } = useSessions();
   const { addLinksFromText } = useInbox();
@@ -77,20 +80,23 @@ export const PopupApp: React.FC = () => {
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-content-primary leading-none">TabZenith</h1>
-            <span className="text-[10px] text-content-muted">Gestor Rápido MV3</span>
+            <h1 className="text-sm font-bold text-content-primary leading-none">{t('header.title')}</h1>
+            <span className="text-[10px] text-content-muted">{t('header.badge')}</span>
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="primary"
-          leftIcon={<ExternalLink className="w-3 h-3" />}
-          onClick={openDashboard}
-          className="text-xs py-1 px-2.5"
-        >
-          Dashboard
-        </Button>
+        <div className="flex items-center gap-2">
+          <LanguageSelector compact />
+          <Button
+            size="sm"
+            variant="primary"
+            leftIcon={<ExternalLink className="w-3 h-3" />}
+            onClick={openDashboard}
+            className="text-xs py-1 px-2.5"
+          >
+            Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Tarjeta de Resumen Rápido */}

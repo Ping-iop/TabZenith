@@ -9,12 +9,16 @@ import {
   Cpu,
   CheckCircle,
   X,
+  AlertTriangle,
+  ExternalLink,
 } from 'lucide-react';
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
 import { useInbox } from '@/core/hooks/useInbox';
 import { useExecutiveDashboard } from '@/core/hooks/useExecutiveDashboard';
 import { useSmartSearch } from '@/core/hooks/useSmartSearch';
+import { useI18n } from '@/core/i18n/I18nContext';
+import { LanguageSelector } from '@/ui/molecules/LanguageSelector';
 
 import { ExecutiveKpiGrid } from '@/ui/organisms/ExecutiveKpiGrid';
 import { ExecutiveActionsBar } from '@/ui/organisms/ExecutiveActionsBar';
@@ -33,6 +37,7 @@ import { container } from '@/core/di/container';
 type ActiveView = 'command_center' | 'groups_tabs' | 'inbox' | 'sessions';
 
 export const DashboardApp: React.FC = () => {
+  const { t } = useI18n();
   const [activeView, setActiveView] = useState<ActiveView>('command_center');
   const [isLayaConnected, setIsLayaConnected] = useState<boolean | null>(null);
 
@@ -143,10 +148,10 @@ export const DashboardApp: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold tracking-tight text-content-primary">
-                  TabZenith
+                  {t('header.title')}
                 </h1>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-subtle text-brand-primary border border-brand-border">
-                  Gerencial
+                  {t('header.badge')}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-content-muted">
@@ -156,17 +161,17 @@ export const DashboardApp: React.FC = () => {
                       isChromeEnv ? 'bg-emerald-400' : 'bg-amber-400'
                     }`}
                   />
-                  <span>{isChromeEnv ? 'Chrome MV3' : 'Entorno Mock'}</span>
+                  <span>{isChromeEnv ? t('header.env.chrome') : t('header.env.mock')}</span>
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1" title="Laya Core Multilingual en CPU (puerto 8092)">
+                <span className="flex items-center gap-1" title="Laya Core Multilingual CPU (port 8092)">
                   <Cpu className="w-3 h-3 text-brand-primary" />
                   <span>
                     {isLayaConnected === null
-                      ? 'Conectando Laya...'
+                      ? t('header.laya.connecting')
                       : isLayaConnected
-                      ? 'Laya Core (CPU)'
-                      : 'Laya Heurístico (CPU)'}
+                      ? t('header.laya.connected')
+                      : t('header.laya.heuristic')}
                   </span>
                 </span>
               </div>
@@ -178,7 +183,7 @@ export const DashboardApp: React.FC = () => {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Búsqueda inteligente difusa (título, URL, tema)..."
+              placeholder={t('header.searchPlaceholder')}
               leftIcon={<Search className="w-4 h-4 text-brand-primary" />}
               className="bg-surface-subtle"
             />
@@ -192,61 +197,89 @@ export const DashboardApp: React.FC = () => {
             )}
           </div>
 
-          {/* Menú de Vistas */}
-          <nav className="flex items-center gap-1.5 bg-surface-subtle p-1 rounded-lg border border-surface-border">
-            <button
-              onClick={() => setActiveView('command_center')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeView === 'command_center'
-                  ? 'bg-brand-primary text-content-primary shadow-sm'
-                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Centro de Mando</span>
-            </button>
+          {/* Menú de Vistas y Selector de Idioma */}
+          <div className="flex items-center gap-3">
+            <nav className="flex items-center gap-1 bg-surface-subtle p-1 rounded-lg border border-surface-border">
+              <button
+                onClick={() => setActiveView('command_center')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'command_center'
+                    ? 'bg-brand-primary text-content-primary shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                <span>{t('nav.commandCenter')}</span>
+              </button>
 
-            <button
-              onClick={() => setActiveView('groups_tabs')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeView === 'groups_tabs'
-                  ? 'bg-brand-primary text-content-primary shadow-sm'
-                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Grupos ({groups.length})</span>
-            </button>
+              <button
+                onClick={() => setActiveView('groups_tabs')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'groups_tabs'
+                    ? 'bg-brand-primary text-content-primary shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>{t('nav.groupsTabs')} ({groups.length})</span>
+              </button>
 
-            <button
-              onClick={() => setActiveView('inbox')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeView === 'inbox'
-                  ? 'bg-brand-primary text-content-primary shadow-sm'
-                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-              }`}
-            >
-              <Inbox className="w-3.5 h-3.5" />
-              <span>Curaduría ({inboxLinks.length})</span>
-            </button>
+              <button
+                onClick={() => setActiveView('inbox')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'inbox'
+                    ? 'bg-brand-primary text-content-primary shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <Inbox className="w-3.5 h-3.5" />
+                <span>{t('nav.inbox')} ({inboxLinks.length})</span>
+              </button>
 
-            <button
-              onClick={() => setActiveView('sessions')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeView === 'sessions'
-                  ? 'bg-brand-primary text-content-primary shadow-sm'
-                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Sesiones ({sessions.length})</span>
-            </button>
-          </nav>
+              <button
+                onClick={() => setActiveView('sessions')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'sessions'
+                    ? 'bg-brand-primary text-content-primary shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>{t('nav.sessions')} ({sessions.length})</span>
+              </button>
+            </nav>
+
+            <LanguageSelector />
+          </div>
         </div>
       </header>
 
       {/* Contenedor Principal */}
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Banner de Aviso de Servidor Local de Desarrollo vs Extensión Real */}
+        {!isChromeEnv && (
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-sm text-amber-300">{t('mockBanner.title')}</h3>
+                <p className="text-xs text-amber-200/80 mt-0.5 max-w-3xl">{t('mockBanner.desc')}</p>
+                <p className="text-[11px] text-amber-300/70 mt-1">{t('mockBanner.shortcutHint')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="chrome-extension://oigehliembpnijhhigpeofedoilbgaaj/dashboard.html"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-primary text-content-primary text-xs font-semibold hover:bg-brand-primary/90 transition-colors shadow-sm"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>{t('mockBanner.btnOpenReal')}</span>
+              </a>
+            </div>
+          </div>
+        )}
         {/* Banner de Feedback de Acciones Ejecutivas */}
         {actionFeedback && (
           <div className="flex items-center justify-between p-3.5 rounded-xl bg-status-success-subtle border border-emerald-500/40 text-emerald-300 text-sm animate-in fade-in">

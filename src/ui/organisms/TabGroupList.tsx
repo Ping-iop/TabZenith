@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -8,10 +8,13 @@ import {
   Globe,
   FolderMinus,
   XCircle,
+  ArrowUpDown,
+  HardDrive,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { GROUP_COLOR_CLASSES } from '../tokens/colors.tokens';
 import { TabItemRow } from '../molecules/TabItemRow';
 import { Card } from '../atoms/Card';
@@ -50,7 +53,16 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   onGroupByTopic,
   onGroupByDomain,
 }) => {
+  const { t } = useI18n();
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [isSortedAlpha, setIsSortedAlpha] = useState(false);
+
+  const displayedGroups = useMemo(() => {
+    if (!isSortedAlpha) return groups;
+    return [...groups].sort((a, b) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+    );
+  }, [groups, isSortedAlpha]);
 
   const toggleCollapse = (groupId: string) => {
     setCollapsedGroups((prev) => {
@@ -75,16 +87,34 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   }
 
   const ungroupedTabs = tabs.filter((t) => !t.groupId);
+  const ungroupedActive = ungroupedTabs.filter((t) => !t.discarded).length;
+  const ungroupedDiscarded = ungroupedTabs.filter((t) => t.discarded).length;
+  const ungroupedMemMb = (ungroupedActive * 150) + (ungroupedDiscarded * 15);
+  const formattedUngroupedMem = ungroupedMemMb >= 1024
+    ? `${(ungroupedMemMb / 1024).toFixed(1)} GB`
+    : `${ungroupedMemMb} MB`;
 
   return (
     <div className="space-y-4">
       {/* Barra de Acciones de Agrupación Superior */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
-          Grupos y Pestañas Activas ({tabs.length})
+          {t('nav.groupsTabs')} ({groups.length} grupos • {tabs.length} pestañas)
         </h3>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Botón de Orden Alfabético A-Z */}
+          <Button
+            size="sm"
+            variant={isSortedAlpha ? 'primary' : 'outline'}
+            leftIcon={<ArrowUpDown className="w-3.5 h-3.5" />}
+            onClick={() => setIsSortedAlpha((prev) => !prev)}
+            className="text-xs"
+            title="Alternar orden alfabético A-Z / orden original"
+          >
+            {isSortedAlpha ? t('groups.sortAlpha') : t('groups.sortDefault')}
+          </Button>
+
           {onGroupByTopic && (
             <Button
               size="sm"
@@ -94,7 +124,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
               className="text-xs"
               title="Agrupar automáticamente por categorías y temas de Laya Core"
             >
-              Agrupar por Tema
+              {t('action.groupByTopic')}
             </Button>
           )}
 
@@ -107,7 +137,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
               className="text-xs"
               title="Agrupar automáticamente por dominio web de origen"
             >
-              Agrupar por Dominio
+              {t('action.groupByDomain')}
             </Button>
           )}
 
@@ -118,16 +148,23 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
             onClick={onCreateEmptyGroup}
             className="text-xs"
           >
-            Nuevo Grupo
+            {t('groups.createGroup')}
           </Button>
         </div>
       </div>
 
       {/* Grupos creados */}
-      {groups.map((group) => {
+      {displayedGroups.map((group) => {
         const groupTabs = tabs.filter((t) => t.groupId === group.id);
         const isCollapsed = collapsedGroups.has(group.id);
         const colorStyle = GROUP_COLOR_CLASSES[group.color];
+
+        const activeCount = groupTabs.filter((t) => !t.discarded).length;
+        const discardedCount = groupTabs.filter((t) => t.discarded).length;
+        const memoryMb = (activeCount * 150) + (discardedCount * 15);
+        const formattedMemory = memoryMb >= 1024
+          ? `${(memoryMb / 1024).toFixed(1)} GB`
+          : `${memoryMb} MB`;
 
         return (
           <Card
@@ -141,7 +178,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
             {/* Cabecera del Grupo */}
             <div className="flex items-center justify-between p-3 border-b border-surface-border/50 bg-surface-subtle/40">
               <div
-                className="flex items-center gap-2 cursor-pointer flex-1 select-none"
+                className="flex items-center gap-2 cursor-pointer flex-1 select-none flex-wrap"
                 onClick={() => toggleCollapse(group.id)}
               >
                 <button
@@ -158,9 +195,20 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 <span className="font-semibold text-sm text-content-primary">
                   {group.title}
                 </span>
-                <span className="text-xs text-content-muted">
-                  ({groupTabs.length} {groupTabs.length === 1 ? 'pestaña' : 'pestañas'})
-                </span>
+
+                {/* Indicador de cantidad de pestañas y memoria ocupada */}
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-surface-elevated text-content-secondary font-medium border border-border-default/60">
+                    {groupTabs.length} {groupTabs.length === 1 ? 'pestaña' : 'pestañas'}
+                  </span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 font-mono font-medium border border-cyan-500/30 flex items-center gap-1"
+                    title={`Memoria ocupada estimada: ${formattedMemory} (${activeCount} en RAM, ${discardedCount} congeladas)`}
+                  >
+                    <HardDrive className="w-3 h-3 text-cyan-400" />
+                    <span>~{formattedMemory}</span>
+                  </span>
+                </div>
               </div>
 
               {/* Acciones de Grupo */}
@@ -220,12 +268,18 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
       {/* Pestañas sueltas (sin grupo) */}
       {ungroupedTabs.length > 0 && (
         <Card className="border-l-4 border-slate-600 bg-surface-card/60">
-          <div className="p-3 border-b border-surface-border/50 bg-surface-subtle/30 flex items-center justify-between">
-            <span className="font-semibold text-sm text-content-secondary">
-              Pestañas sin Agrupar ({ungroupedTabs.length})
-            </span>
+          <div className="p-3 border-b border-surface-border/50 bg-surface-subtle/30 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-content-secondary">
+                {t('grid.noGroup')} ({ungroupedTabs.length})
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 font-mono font-medium border border-cyan-500/30 flex items-center gap-1">
+                <HardDrive className="w-3 h-3 text-cyan-400" />
+                <span>~{formattedUngroupedMem}</span>
+              </span>
+            </div>
             <span className="text-xs text-content-muted">
-              Haz clic en "Agrupar por Tema" o "Agrupar por Dominio" para organizarlas
+              {t('action.groupByTopic')} / {t('action.groupByDomain')}
             </span>
           </div>
           <div className="p-2 space-y-1.5">
