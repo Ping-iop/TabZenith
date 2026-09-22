@@ -13,6 +13,7 @@ import {
   Folder,
 } from 'lucide-react';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { cn } from '../utils/cn';
 
 interface DomainBadgeProps {
@@ -81,8 +82,20 @@ export const DOMAIN_CONFIG: Record<
   },
 };
 
+export const getDomainLabel = (
+  domain: MarpDomainTaxonomy,
+  t: (key: any) => string
+): string => {
+  const taxKey = `taxonomy.${domain}` as const;
+  const translated = t(taxKey);
+  if (translated && translated !== taxKey) return translated;
+  return DOMAIN_CONFIG[domain]?.label || domain;
+};
+
 export const DomainBadge: React.FC<DomainBadgeProps> = ({ domain, className }) => {
+  const { t } = useI18n();
   const config = DOMAIN_CONFIG[domain] || DOMAIN_CONFIG.general;
+  const label = getDomainLabel(domain, t);
 
   return (
     <span
@@ -93,7 +106,7 @@ export const DomainBadge: React.FC<DomainBadgeProps> = ({ domain, className }) =
       )}
     >
       {config.icon}
-      <span>{config.label}</span>
+      <span>{label}</span>
     </span>
   );
 };

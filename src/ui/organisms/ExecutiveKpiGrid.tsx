@@ -3,7 +3,7 @@ import { Layers, HardDrive, CheckCircle2, Cpu, X } from 'lucide-react';
 import { ExecutiveMetrics } from '@/core/domain/metrics.types';
 import { useI18n } from '@/core/i18n/I18nContext';
 import { KpiMetricCard } from '../molecules/KpiMetricCard';
-import { DomainBadge, DOMAIN_CONFIG } from '../molecules/DomainBadge';
+import { DomainBadge, getDomainLabel } from '../molecules/DomainBadge';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
 import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
@@ -46,7 +46,7 @@ export const ExecutiveKpiGrid: React.FC<ExecutiveKpiGridProps> = ({
         <KpiMetricCard
           title={t('kpi.estimatedRamSaved')}
           value={ramFormatted}
-          subtext={t('kpi.savedByDiscard')}
+          subtext={`${metrics.ramRecoveredPercentage}% ${t('kpi.ramRecoveredFromTotal')} (${metrics.totalDeviceRamGb} GB)`}
           icon={<HardDrive className="w-5 h-5" />}
           variant="success"
         />
@@ -64,7 +64,7 @@ export const ExecutiveKpiGrid: React.FC<ExecutiveKpiGridProps> = ({
             isClassifying
               ? 'Laya AI...'
               : topDomain
-              ? `${t('kpi.mainDomain')}: ${topDomain.domain}`
+              ? `${t('kpi.mainDomain')}: ${getDomainLabel(topDomain.domain, t)}`
               : 'N/A'
           }
           icon={<Cpu className="w-5 h-5" />}
@@ -82,7 +82,7 @@ export const ExecutiveKpiGrid: React.FC<ExecutiveKpiGridProps> = ({
               </span>
               {selectedDomains.length > 0 && (
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-primary/20 text-brand-primary border border-brand-primary/30 font-semibold">
-                  {t('filter.filteringBy')}: {selectedDomains.map((d) => DOMAIN_CONFIG[d as MarpDomainTaxonomy]?.label || d).join(', ')}
+                  {t('filter.filteringBy')}: {selectedDomains.map((d) => getDomainLabel(d as MarpDomainTaxonomy, t)).join(', ')}
                 </span>
               )}
             </div>

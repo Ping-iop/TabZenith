@@ -36,8 +36,8 @@ export class GmailBackupService {
   static async detectGmailAccount(): Promise<string> {
     if (typeof chrome !== 'undefined' && chrome.identity?.getProfileUserInfo) {
       try {
-        const userInfo = await new Promise<chrome.identity.UserInfo>((resolve) => {
-          chrome.identity.getProfileUserInfo((info) => resolve(info));
+        const userInfo = await new Promise<{ email?: string; id?: string }>((resolve) => {
+          (chrome.identity.getProfileUserInfo as any)((info: any) => resolve(info));
         });
         if (userInfo?.email && userInfo.email.trim() !== '') {
           await this.saveGmailAccount(userInfo.email);
@@ -51,7 +51,7 @@ export class GmailBackupService {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       try {
         const res = await chrome.storage.local.get([GMAIL_ACCOUNT_KEY]);
-        if (res[GMAIL_ACCOUNT_KEY]) return res[GMAIL_ACCOUNT_KEY];
+        if (typeof res[GMAIL_ACCOUNT_KEY] === 'string') return res[GMAIL_ACCOUNT_KEY];
       } catch {
         // Fallback
       }
@@ -143,7 +143,7 @@ export class GmailBackupService {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.local) {
         const res = await chrome.storage.local.get([GOOGLE_CLOUD_BACKUP_KEY]);
-        if (res[GOOGLE_CLOUD_BACKUP_KEY]) {
+        if (typeof res[GOOGLE_CLOUD_BACKUP_KEY] === 'string') {
           return JSON.parse(res[GOOGLE_CLOUD_BACKUP_KEY]);
         }
       }

@@ -3,6 +3,7 @@ import { Globe, Snowflake, X, Star, ExternalLink } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { DomainBadge } from './DomainBadge';
 import { ContextMenu } from './ContextMenu';
 import { cn } from '../utils/cn';
@@ -42,6 +43,8 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
   onToggleFavorite,
   className,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div
       className={cn(
@@ -77,7 +80,7 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
           )}
           {tab.active && (
             <span
-              title="Pestaña activa actualmente"
+              title={t('grid.statusActive')}
               className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-status-success ring-1 ring-surface-base"
             />
           )}
@@ -90,7 +93,7 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
               <button
                 type="button"
                 onClick={onActivate}
-                title={`Ir a esta pestaña en Chrome: ${tab.title}`}
+                title={`${t('context.goToTab')}: ${tab.title}`}
                 className="font-medium text-left text-content-primary hover:text-brand-primary transition-colors truncate block"
               >
                 {tab.title}
@@ -108,11 +111,11 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
             )}
             {tab.discarded && (
               <span
-                title="Pestaña suspendida (RAM liberada)"
+                title={`${t('kpi.approxConsumption')} (RAM)`}
                 className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.2 text-[10px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded"
               >
                 <Snowflake className="w-2.5 h-2.5" />
-                <span>Pausada</span>
+                <span>{t('grid.statusFrozen')}</span>
               </span>
             )}
           </div>
@@ -126,7 +129,7 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
         {onToggleFavorite && (
           <button
             onClick={onToggleFavorite}
-            title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorita'}
+            title={isFavorite ? '⭐' : '☆'}
             className={cn(
               'p-1 rounded transition-colors',
               isFavorite
@@ -141,7 +144,7 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
           <button
             type="button"
             onClick={onActivate}
-            title="Ir a esta pestaña en Chrome"
+            title={t('context.goToTab')}
             className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />

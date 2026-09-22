@@ -94,12 +94,20 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
     }
   };
 
+  const totalDeviceRamGb =
+    typeof navigator !== 'undefined' &&
+    'deviceMemory' in navigator &&
+    typeof (navigator as { deviceMemory?: number }).deviceMemory === 'number'
+      ? (navigator as { deviceMemory: number }).deviceMemory
+      : 16;
+  const totalDeviceRamMb = totalDeviceRamGb * 1024;
+
   if (tabs.length === 0) {
     return (
       <EmptyState
         icon={<Layers className="w-8 h-8" />}
-        title="No hay pestañas abiertas"
-        description="Abre pestañas en tu navegador o restaura una sesión guardada desde el panel lateral."
+        title={t('groups.noGroups')}
+        description={t('session.empty')}
       />
     );
   }
@@ -111,13 +119,14 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   const formattedUngroupedMem = ungroupedMemMb >= 1024
     ? `${(ungroupedMemMb / 1024).toFixed(1)} GB`
     : `${ungroupedMemMb} MB`;
+  const ungroupedRamPercent = Math.min(100, Math.round((ungroupedMemMb / totalDeviceRamMb) * 1000) / 10);
 
   return (
     <div className="space-y-4">
       {/* Barra de Acciones de Agrupación Superior */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wider">
-          {t('nav.groupsTabs')} ({groups.length} grupos • {tabs.length} pestañas)
+          {t('nav.groupsTabs')} ({groups.length} {groups.length === 1 ? t('common.groupSingular') : t('common.groupPlural')} • {tabs.length} {tabs.length === 1 ? t('common.tabSingular') : t('common.tabPlural')})
         </h3>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -203,6 +212,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
         const formattedMemory = memoryMb >= 1024
           ? `${(memoryMb / 1024).toFixed(1)} GB`
           : `${memoryMb} MB`;
+        const groupRamPercent = Math.min(100, Math.round((memoryMb / totalDeviceRamMb) * 1000) / 10);
 
         return (
           <Card
@@ -220,7 +230,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 onClick={() => toggleCollapse(group.id)}
               >
                 <button
-                  aria-label={isCollapsed ? 'Expandir grupo' : 'Colapsar grupo'}
+                  aria-label={isCollapsed ? t('groups.expandAll') : t('groups.collapseAll')}
                   className="text-content-muted hover:text-content-primary"
                 >
                   {isCollapsed ? (
@@ -237,14 +247,14 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 {/* Indicador de cantidad de pestañas y memoria ocupada */}
                 <div className="flex items-center gap-1.5 ml-2">
                   <span className="text-xs px-2 py-0.5 rounded-full bg-surface-elevated text-content-secondary font-medium border border-border-default/60">
-                    {groupTabs.length} {groupTabs.length === 1 ? 'pestaña' : 'pestañas'}
+                    {groupTabs.length} {groupTabs.length === 1 ? t('common.tabSingular') : t('common.tabPlural')}
                   </span>
                   <span
                     className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 font-mono font-medium border border-cyan-500/30 flex items-center gap-1"
-                    title={`Memoria ocupada estimada: ${formattedMemory} (${activeCount} en RAM, ${discardedCount} congeladas)`}
+                    title={`${t('kpi.approxConsumption')}: ~${formattedMemory} (~${groupRamPercent}% de ${totalDeviceRamGb} GB). ${activeCount} ${t('grid.statusActive')}, ${discardedCount} ${t('grid.statusFrozen')}`}
                   >
                     <HardDrive className="w-3 h-3 text-cyan-400" />
-                    <span>~{formattedMemory}</span>
+                    <span>~{formattedMemory} ({groupRamPercent}%)</span>
                   </span>
                 </div>
               </div>
@@ -253,21 +263,21 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => onEditGroup(group)}
-                  title="Renombrar o cambiar color del grupo"
+                  title={t('groups.rename')}
                   className="p-1.5 rounded hover:bg-surface-elevated text-content-muted hover:text-content-primary transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => onDeleteGroup(group.id, false)}
-                  title="Desagrupar (conservar pestañas abiertas en el navegador)"
+                  title={t('groups.ungroup')}
                   className="p-1.5 rounded hover:bg-surface-elevated text-content-muted hover:text-content-primary transition-colors"
                 >
                   <FolderMinus className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => onDeleteGroup(group.id, true)}
-                  title="Cerrar todas las pestañas de este grupo en Chrome (no afecta fijadas)"
+                  title={t('groups.close')}
                   className="p-1.5 rounded hover:bg-status-danger-subtle text-content-muted hover:text-status-danger transition-colors"
                 >
                   <XCircle className="w-3.5 h-3.5" />
@@ -280,7 +290,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
               <div className="p-2 space-y-1.5">
                 {groupTabs.length === 0 ? (
                   <p className="text-xs text-content-muted text-center py-3">
-                    Grupo vacío. Mueve pestañas aquí desde su menú contextual.
+                    {t('groups.emptyGroup')}
                   </p>
                 ) : (
                   groupTabs.map((tab) => (
@@ -312,11 +322,14 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
           <div className="p-3 border-b border-surface-border/50 bg-surface-subtle/30 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-content-secondary">
-                {t('grid.noGroup')} ({ungroupedTabs.length})
+                {t('grid.noGroup')} ({ungroupedTabs.length} {ungroupedTabs.length === 1 ? t('common.tabSingular') : t('common.tabPlural')})
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 font-mono font-medium border border-cyan-500/30 flex items-center gap-1">
+              <span
+                className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 font-mono font-medium border border-cyan-500/30 flex items-center gap-1"
+                title={`${t('kpi.approxConsumption')}: ~${formattedUngroupedMem} (~${ungroupedRamPercent}% de ${totalDeviceRamGb} GB)`}
+              >
                 <HardDrive className="w-3 h-3 text-cyan-400" />
-                <span>~{formattedUngroupedMem}</span>
+                <span>~{formattedUngroupedMem} ({ungroupedRamPercent}%)</span>
               </span>
             </div>
             <span className="text-xs text-content-muted">

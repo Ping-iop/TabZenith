@@ -12,6 +12,9 @@ export interface ExecutiveMetrics {
   readonly savedSessionsCount: number;
   readonly totalSavedTabsCount: number;
   readonly estimatedRamSavedMb: number; // ~150 MB por pestaña guardada o suspendida
+  readonly totalDeviceRamGb: number;
+  readonly totalDeviceRamMb: number;
+  readonly ramRecoveredPercentage: number; // Porcentaje de la RAM total del dispositivo recuperada
   readonly inboxPendingCount: number;
   readonly inboxReviewedCount: number;
   readonly curationRatePercent: number;

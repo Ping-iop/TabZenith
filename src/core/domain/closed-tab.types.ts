@@ -8,3 +8,5 @@ export interface ClosedTabItem {
   readonly closedAt: number;
   readonly reason: 'deduplicate' | 'manual' | 'freeze';
 }
+
+export type ClosedTabRecord = ClosedTabItem;

@@ -10,10 +10,7 @@ import {
   Check,
   FolderOpen,
   FolderPlus,
-  Edit2,
   Folder,
-  Tag,
-  Palette,
   X,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
@@ -53,9 +50,9 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
   onSetTabFolder,
   onCreateFolder,
   onDeleteFolder,
-  onRenameFolder,
-  onCloseTab,
-  onSuspendTab,
+  onRenameFolder: _onRenameFolder,
+  onCloseTab: _onCloseTab,
+  onSuspendTab: _onSuspendTab,
 }) => {
   const { t } = useI18n();
   const [filterText, setFilterText] = useState('');
@@ -163,13 +160,13 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-base font-bold text-content-primary flex items-center gap-2">
-            <span>Biblioteca de Inspiración & Favoritos</span>
+            <span>{t('favorites.title')}</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
-              {favoriteUrls.size} {favoriteUrls.size === 1 ? 'enlace' : 'enlaces'}
+              {favoriteUrls.size} {favoriteUrls.size === 1 ? t('common.tabSingular') : t('common.tabPlural')}
             </span>
           </h2>
           <p className="text-xs text-content-muted mt-0.5">
-            Organiza tus referencias de inspiración y enlaces clave clasificados en carpetas temáticas.
+            {t('favorites.desc')}
           </p>
         </div>
 
@@ -181,9 +178,9 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
               leftIcon={<FolderOpen className="w-3.5 h-3.5 text-brand-primary" />}
               onClick={handleOpenAllInFolder}
               className="text-xs"
-              title="Abrir en Chrome todos los enlaces de esta vista"
+              title={t('favorites.openAll')}
             >
-              Abrir Todos ({filteredFavorites.length})
+              {t('favorites.openAll')} ({filteredFavorites.length})
             </Button>
           )}
 
@@ -280,7 +277,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
           )}
         >
           <Star className="w-3.5 h-3.5 text-amber-400" />
-          <span>Todos ({favoriteList.length})</span>
+          <span>{t('inbox.filterAll')} ({favoriteList.length})</span>
         </button>
 
         {/* Tab: Sin Carpeta */}
@@ -295,7 +292,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
           )}
         >
           <Folder className="w-3.5 h-3.5 text-content-muted" />
-          <span>Sin Carpeta ({favoriteList.filter((f) => !f.folderId).length})</span>
+          <span>{t('grid.noGroup')} ({favoriteList.filter((f) => !f.folderId).length})</span>
         </button>
 
         {/* Carpetas personalizadas */}
@@ -445,13 +442,13 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
 
                       {item.isOpen && (
                         <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
-                          Abierta
+                          {t('grid.statusActive')}
                         </span>
                       )}
                       {item.discarded && (
                         <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 flex items-center gap-0.5 flex-shrink-0">
                           <Snowflake className="w-2.5 h-2.5" />
-                          <span>RAM liberada</span>
+                          <span>{t('grid.statusFrozen')}</span>
                         </span>
                       )}
                     </div>
@@ -470,7 +467,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCopyUrl(item.url)}
-                    title="Copiar URL"
+                    title={t('context.copyUrl')}
                     className="p-1 rounded text-content-muted hover:text-content-primary hover:bg-surface-elevated transition-colors"
                   >
                     {copiedUrl === item.url ? (
@@ -489,7 +486,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
                         container.browserTabs.createTab(item.url, true);
                       }
                     }}
-                    title={item.isOpen ? 'Ir a esta pestaña en Chrome' : 'Abrir en Chrome'}
+                    title={item.isOpen ? `${t('context.goToTab')}: ${item.title}` : `Chrome: ${item.title}`}
                     className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-surface-elevated transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />

@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { TabGroup } from '@/core/domain/group.types';
+import { useI18n } from '@/core/i18n/I18nContext';
 import { GROUP_COLOR_CLASSES } from '../tokens/colors.tokens';
 import { cn } from '../utils/cn';
 
@@ -41,6 +42,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onClose,
   isDiscarded = false,
 }) => {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [showGroupsSubmenu, setShowGroupsSubmenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -154,7 +156,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                   className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-brand-primary/10 text-brand-primary font-medium transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Ir a la pestaña en Chrome</span>
+                  <span>{t('context.goToTab')}</span>
                 </button>
                 <div className="my-1 border-t border-surface-border" />
               </>
@@ -168,7 +170,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               >
                 <span className="flex items-center gap-2">
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  <span>Mover a grupo</span>
+                  <span>{t('context.moveToGroup')}</span>
                 </span>
                 <span className="text-[10px] text-content-muted">◀</span>
               </button>
@@ -177,7 +179,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
                 <div className="absolute right-full top-0 mr-1.5 w-48 rounded-lg bg-surface-card border border-surface-border shadow-2xl py-1 z-50">
                   {availableGroups.length === 0 ? (
                     <div className="px-3 py-2 text-content-muted text-[11px]">
-                      No hay grupos creados
+                      {t('context.noGroups')}
                     </div>
                   ) : (
                     availableGroups.map((grp) => {
@@ -220,7 +222,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-elevated hover:text-brand-primary transition-colors"
           >
             <FolderPlus className="w-3.5 h-3.5 text-brand-primary" />
-            <span>Crear nuevo grupo aquí</span>
+            <span>{t('context.createGroupHere')}</span>
           </button>
 
           {/* Quitar del grupo */}
@@ -233,7 +235,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-elevated text-content-secondary hover:text-content-primary transition-colors"
             >
               <FolderMinus className="w-3.5 h-3.5" />
-              <span>Extraer de este grupo</span>
+              <span>{t('context.removeFromGroup')}</span>
             </button>
           )}
 
@@ -254,7 +256,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             )}
           >
             <Snowflake className="w-3.5 h-3.5" />
-            <span>{isDiscarded ? 'Ya suspendida (RAM liberada)' : 'Suspender (Liberar RAM)'}</span>
+            <span>{isDiscarded ? t('context.alreadySuspended') : t('context.suspend')}</span>
           </button>
 
           {/* Copiar URL */}
@@ -267,7 +269,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             ) : (
               <Copy className="w-3.5 h-3.5" />
             )}
-            <span>{copied ? '¡Copiado!' : 'Copiar URL'}</span>
+            <span>{copied ? t('context.copied') : t('context.copyUrl')}</span>
           </button>
 
           <div className="my-1 border-t border-surface-border" />
@@ -281,9 +283,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-status-danger/20 text-status-danger transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Cerrar pestaña</span>
+            <span>{t('context.closeTab')}</span>
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

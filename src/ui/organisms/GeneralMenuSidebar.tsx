@@ -8,14 +8,11 @@ import {
   Inbox,
   RotateCcw,
   BookOpen,
-  Sparkles,
   Cpu,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
   Mail,
 } from 'lucide-react';
 import { useI18n } from '@/core/i18n/I18nContext';
+import { AnimatedLogo } from '../molecules/AnimatedLogo';
 
 export type DashboardViewType =
   | 'command_center'
@@ -128,29 +125,21 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
             : 'translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Encabezado Superior del Menú */}
-        <div className="p-5 border-b border-surface-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-brand-primary to-blue-600 text-white shadow-md flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight text-content-primary">
-                  {t('header.title')}
-                </h2>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-subtle text-brand-primary border border-brand-border">
-                  PRO
-                </span>
-              </div>
-              <p className="text-[11px] text-content-muted">Gestor Ejecutivo de Pestañas</p>
-            </div>
+        {/* Encabezado Superior del Menú con Logotipo Unificado */}
+        <div className="p-4 border-b border-surface-border">
+          <div className="flex items-center justify-between">
+            <AnimatedLogo
+              onClick={() => {
+                onViewChange('command_center');
+                if (onCloseMobile) onCloseMobile();
+              }}
+            />
           </div>
 
           {/* Indicadores de Entorno y Laya Core */}
-          <div className="mt-4 pt-3 border-t border-surface-border/60 space-y-2">
+          <div className="mt-3.5 pt-3 border-t border-surface-border/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-content-muted">Navegador</span>
+              <span className="text-content-muted">{t('sidebar.browser')}</span>
               <span className="flex items-center gap-1.5 font-medium">
                 <span
                   className={`w-2 h-2 rounded-full ${
@@ -181,12 +170,12 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
               <button
                 type="button"
                 onClick={onOpenGmailBackup}
-                className="w-full mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/15 via-amber-500/10 to-surface-subtle border border-rose-500/30 text-rose-300 hover:text-rose-200 hover:border-rose-500/50 transition-all text-xs font-semibold cursor-pointer shadow-sm"
-                title="Sincronizar y respaldar todo tu historial con tu cuenta de Gmail"
+                className="w-full mt-2 flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-rose-500/15 via-amber-500/10 to-surface-subtle border border-rose-500/30 text-rose-300 hover:text-rose-200 hover:border-rose-500/50 transition-all text-xs font-semibold cursor-pointer shadow-sm"
+                title={t('header.gmailBackupTitle')}
               >
                 <span className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Respaldo con Gmail</span>
+                  <span>{t('sidebar.gmailBackup')}</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
                   Cloud
@@ -199,7 +188,7 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
         {/* Lista de Navegación */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           <div className="px-3 py-1.5 text-[10px] font-semibold text-content-muted uppercase tracking-wider">
-            Vistas y Módulos
+            {t('sidebar.viewsModules')}
           </div>
 
           {navItems.map((item) => {
@@ -250,14 +239,14 @@ export const GeneralMenuSidebar: React.FC<GeneralMenuSidebarProps> = ({
               <span>{t('nav.documentation')}</span>
             </div>
             <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-primary/20 text-brand-primary">
-              Guía
+              {t('sidebar.guideBadge')}
             </span>
           </button>
         </nav>
 
         {/* Footer del Menú */}
         <div className="p-3 border-t border-surface-border bg-surface-subtle/30 text-center text-[11px] text-content-muted">
-          TabZenith v1.0.6 • CPU First AI
+          TabZenith v1.0.7 • CPU First AI
         </div>
       </aside>
     </>

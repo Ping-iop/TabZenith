@@ -2,11 +2,8 @@ import React from 'react';
 import {
   RotateCcw,
   Trash2,
-  ExternalLink,
   History,
   Globe,
-  Sparkles,
-  Layers,
 } from 'lucide-react';
 import { ClosedTabItem } from '@/core/domain/closed-tab.types';
 import { useI18n } from '@/core/i18n/I18nContext';

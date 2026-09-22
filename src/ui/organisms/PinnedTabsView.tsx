@@ -93,7 +93,7 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-xs px-2.5 py-1 rounded-full bg-surface-elevated text-content-secondary font-medium border border-border-default/60 flex items-center gap-1.5">
             <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Consumo aproximado: ~{formattedRam} RAM</span>
+            <span>{t('kpi.approxConsumption')}: ~{formattedRam}</span>
           </span>
         </div>
 
@@ -110,7 +110,7 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
       <Card className="divide-y divide-surface-border/60 bg-surface-card overflow-hidden">
         {filteredTabs.length === 0 ? (
           <div className="p-6 text-center text-xs text-content-muted">
-            No se encontraron pestañas fijadas que coincidan con la búsqueda.
+            {t('pinned.emptyDesc')}
           </div>
         ) : (
           filteredTabs.map((tab) => (
@@ -142,20 +142,20 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
                   <div className="flex items-center gap-2">
                     <span
                       onClick={() => container.browserTabs.activateTab(tab.id)}
-                      title={`Ir a esta pestaña en Chrome: ${tab.title}`}
+                      title={`${t('context.goToTab')}: ${tab.title}`}
                       className="font-medium text-content-primary hover:text-brand-primary truncate cursor-pointer block"
                     >
                       {tab.title}
                     </span>
                     {tab.active && (
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
-                        Activa
+                        {t('grid.statusActive')}
                       </span>
                     )}
                     {tab.discarded && (
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 flex items-center gap-0.5 flex-shrink-0">
                         <Snowflake className="w-2.5 h-2.5" />
-                        <span>RAM liberada</span>
+                        <span>{t('grid.statusFrozen')}</span>
                       </span>
                     )}
                   </div>
@@ -191,7 +191,7 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleCopyUrl(tab.url)}
-                  title="Copiar URL"
+                  title={t('context.copyUrl')}
                   className="p-1 rounded text-content-muted hover:text-content-primary hover:bg-surface-elevated transition-colors"
                 >
                   {copiedUrl === tab.url ? (
@@ -204,7 +204,7 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => container.browserTabs.activateTab(tab.id)}
-                  title="Ir a esta pestaña en Chrome"
+                  title={t('context.goToTab')}
                   className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-surface-elevated transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />

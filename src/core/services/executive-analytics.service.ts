@@ -25,6 +25,19 @@ export class ExecutiveAnalyticsService {
     // RAM ahorrada estimada: pestañas suspendidas + pestañas que se guardaron y se cerraron
     const estimatedRamSavedMb = (discardedTabsCount + totalSavedTabsCount) * ESTIMATED_MB_PER_TAB;
 
+    // Detección de memoria RAM física del equipo (W3C Device Memory API)
+    const totalDeviceRamGb =
+      typeof navigator !== 'undefined' &&
+      'deviceMemory' in navigator &&
+      typeof (navigator as { deviceMemory?: number }).deviceMemory === 'number'
+        ? (navigator as { deviceMemory: number }).deviceMemory
+        : 16;
+    const totalDeviceRamMb = totalDeviceRamGb * 1024;
+    const ramRecoveredPercentage = Math.min(
+      100,
+      Math.round((estimatedRamSavedMb / totalDeviceRamMb) * 1000) / 10
+    );
+
     const inboxPendingCount = inboxLinks.filter((l) => !l.reviewed && !l.archived).length;
     const inboxReviewedCount = inboxLinks.filter((l) => l.reviewed).length;
     const totalInbox = inboxLinks.length;
@@ -53,6 +66,9 @@ export class ExecutiveAnalyticsService {
       savedSessionsCount,
       totalSavedTabsCount,
       estimatedRamSavedMb,
+      totalDeviceRamGb,
+      totalDeviceRamMb,
+      ramRecoveredPercentage,
       inboxPendingCount,
       inboxReviewedCount,
       curationRatePercent,

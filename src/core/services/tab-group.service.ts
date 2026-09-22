@@ -210,71 +210,125 @@ export class TabGroupService {
 
   /**
    * Ejecuta auto-clasificación en vivo sobre las pestañas abiertas en Chrome.
+   * Lógica Incremental: Revisa qué pestañas ya están ordenadas en sus grupos semánticos correspondientes
+   * y añade únicamente las pestañas pendientes o desubicadas a los grupos existentes, sin rehacer todo el trabajo.
    */
   async autoClassifyAndGroupOpenTabs(): Promise<{ groupedCount: number; categories: string[] }> {
     const allTabs = await this.browserTabs.getOpenTabs();
+    const existingGroups = await this.browserTabs.getTabGroups();
+
     // Proteger estrictamente pestañas fijadas (pinned): no se agrupan
     const tabs = allTabs.filter((t) => !t.pinned);
     if (tabs.length === 0) return { groupedCount: 0, categories: [] };
+
+    const existingGroupById = new Map<string, TabGroup>();
+    const existingGroupByTitle = new Map<string, TabGroup>();
+    existingGroups.forEach((g) => {
+      existingGroupById.set(g.id, g);
+      if (g.title) {
+        existingGroupByTitle.set(g.title.trim().toLowerCase(), g);
+      }
+    });
 
     const classifications = await this.classifier.classifyBatch(
       tabs.map((t) => ({ title: t.title, url: t.url }))
     );
 
-    const groupsMap = new Map<string, { color: ChromeGroupColor; tabs: TabItem[] }>();
+    // Conteo por categoría para aplicar regla de sitios únicos -> "Otros"
+    const categoryCounts = new Map<string, number>();
+    tabs.forEach((_, index) => {
+      const cat = classifications[index].suggestedGroupName;
+      categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + 1);
+    });
+
+    // Pestañas que necesitan ser agregadas o movidas
+    const tabsToAddByTargetTitle = new Map<
+      string,
+      { color: ChromeGroupColor; tabs: TabItem[] }
+    >();
 
     tabs.forEach((tab, index) => {
       const result = classifications[index];
-      const categoryTitle = result.suggestedGroupName;
-      const existing = groupsMap.get(categoryTitle) || {
-        color: result.suggestedColor,
+      const count = categoryCounts.get(result.suggestedGroupName) || 0;
+      const targetGroupTitle = count > 1 ? result.suggestedGroupName : 'Otros';
+      const targetColor: ChromeGroupColor = targetGroupTitle === 'Otros' ? 'grey' : result.suggestedColor;
+
+      // Comprobar si la pestaña ya está correctamente agrupada
+      const currentGroup = tab.groupId ? existingGroupById.get(tab.groupId) : undefined;
+      if (
+        currentGroup &&
+        currentGroup.title.trim().toLowerCase() === targetGroupTitle.trim().toLowerCase()
+      ) {
+        // La pestaña ya está en el grupo correcto: ¡No tocarla!
+        return;
+      }
+
+      // Requiere anexarse o agruparse
+      const existing = tabsToAddByTargetTitle.get(targetGroupTitle) || {
+        color: targetColor,
         tabs: [],
       };
       existing.tabs.push(tab);
-      groupsMap.set(categoryTitle, existing);
+      tabsToAddByTargetTitle.set(targetGroupTitle, existing);
     });
 
-    const singleTabs: TabItem[] = [];
+    // Si todas las pestañas ya estaban ordenadas, terminar de inmediato
+    if (tabsToAddByTargetTitle.size === 0) {
+      return {
+        groupedCount: tabs.length,
+        categories: Array.from(existingGroupByTitle.keys()),
+      };
+    }
+
     const createdCategories: string[] = [];
 
-    for (const [categoryTitle, data] of groupsMap.entries()) {
-      if (data.tabs.length === 1) {
-        singleTabs.push(data.tabs[0]);
-      } else if (data.tabs.length > 1) {
+    for (const [targetTitle, data] of tabsToAddByTargetTitle.entries()) {
+      const existingGroup = existingGroupByTitle.get(targetTitle.toLowerCase());
+
+      if (existingGroup) {
+        // Anexar incrementalmente al grupo ya existente en Chrome
         await this.browserTabs.groupTabs(
+          data.tabs.map((t) => t.id),
+          existingGroup.id
+        );
+        createdCategories.push(targetTitle);
+      } else {
+        // Ordenar alfabéticamente si es "Otros"
+        if (targetTitle === 'Otros') {
+          data.tabs.sort((a, b) => {
+            const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
+            if (dComp !== 0) return dComp;
+            return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+          });
+        }
+
+        const newGroupId = await this.browserTabs.groupTabs(
           data.tabs.map((t) => t.id),
           undefined,
           {
-            title: categoryTitle,
+            title: targetTitle,
             color: data.color,
           }
         );
-        createdCategories.push(categoryTitle);
-      }
-    }
 
-    // Regla de sitios únicos: agruparlos en "Otros" ordenados alfabéticamente
-    if (singleTabs.length > 0) {
-      singleTabs.sort((a, b) => {
-        const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
-        if (dComp !== 0) return dComp;
-        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
-      });
-
-      await this.browserTabs.groupTabs(
-        singleTabs.map((t) => t.id),
-        undefined,
-        {
-          title: 'Otros',
-          color: 'grey',
+        if (newGroupId) {
+          existingGroupByTitle.set(targetTitle.toLowerCase(), {
+            id: newGroupId,
+            title: targetTitle,
+            color: data.color,
+            collapsed: false,
+            createdAt: Date.now(),
+          });
         }
-      );
-      createdCategories.push('Otros');
+        createdCategories.push(targetTitle);
+      }
     }
 
     return {
       groupedCount: tabs.length,
-      categories: createdCategories,
+      categories: Array.from(
+        new Set([...Array.from(existingGroupByTitle.keys()), ...createdCategories])
+      ),
     };
   }
 
@@ -291,78 +345,120 @@ export class TabGroupService {
 
   /**
    * Opción Paralela 2: Agrupar por Dominio Web
-   * Cuando hay un solo website por dominio, no se crea un grupo individual;
-   * se consolidan en "Otros" ordenados alfabéticamente.
+   * Lógica Incremental: Solo revisa qué pestañas ya están agrupadas por su dominio y añade
+   * según la clasificación a los grupos existentes, sin rehacer todo el trabajo.
+   * Sitios con una sola pestaña se consolidan en "Otros" ordenados alfabéticamente.
    */
   async groupByDomain(): Promise<{ groupedCount: number; groupsCreated: number }> {
     const allTabs = await this.browserTabs.getOpenTabs();
+    const existingGroups = await this.browserTabs.getTabGroups();
+
     // Proteger estrictamente pestañas fijadas (pinned): no se agrupan
     const tabs = allTabs.filter((t) => !t.pinned);
     if (tabs.length === 0) return { groupedCount: 0, groupsCreated: 0 };
 
-    const domainMap = new Map<string, TabItem[]>();
-    tabs.forEach((tab) => {
-      const d = tab.domain || 'otros';
-      const existing = domainMap.get(d) || [];
-      existing.push(tab);
-      domainMap.set(d, existing);
+    const existingGroupById = new Map<string, TabGroup>();
+    const existingGroupByTitle = new Map<string, TabGroup>();
+    existingGroups.forEach((g) => {
+      existingGroupById.set(g.id, g);
+      if (g.title) {
+        existingGroupByTitle.set(g.title.trim().toLowerCase(), g);
+      }
     });
 
-    const singleTabs: TabItem[] = [];
-    const multiTabDomains = new Map<string, TabItem[]>();
-
-    for (const [domain, domainTabs] of domainMap.entries()) {
-      if (domainTabs.length === 1) {
-        singleTabs.push(domainTabs[0]);
-      } else {
-        multiTabDomains.set(domain, domainTabs);
-      }
-    }
+    const domainCounts = new Map<string, number>();
+    tabs.forEach((tab) => {
+      const d = tab.domain || 'otros';
+      domainCounts.set(d, (domainCounts.get(d) || 0) + 1);
+    });
 
     const colors: ChromeGroupColor[] = [
       'blue', 'green', 'purple', 'cyan', 'orange', 'yellow', 'red', 'pink', 'teal', 'indigo', 'violet'
     ];
-    let colorIndex = 0;
+    let colorIndex = existingGroups.length;
+
+    // Pestañas que necesitan agregarse a grupos nuevos o existentes
+    const tabsToAddByDomain = new Map<string, TabItem[]>();
+
+    tabs.forEach((tab) => {
+      const d = tab.domain || 'otros';
+      const count = domainCounts.get(d) || 0;
+      const targetTitle = count > 1 ? d : 'Otros';
+
+      // Comprobar si ya está en el grupo correcto
+      const currentGroup = tab.groupId ? existingGroupById.get(tab.groupId) : undefined;
+      if (
+        currentGroup &&
+        currentGroup.title.trim().toLowerCase() === targetTitle.trim().toLowerCase()
+      ) {
+        // La pestaña ya está en su grupo correspondiente: ¡No tocarla!
+        return;
+      }
+
+      const list = tabsToAddByDomain.get(targetTitle) || [];
+      list.push(tab);
+      tabsToAddByDomain.set(targetTitle, list);
+    });
+
+    // Si todas las pestañas ya estaban ordenadas
+    if (tabsToAddByDomain.size === 0) {
+      return {
+        groupedCount: tabs.length,
+        groupsCreated: existingGroups.length,
+      };
+    }
+
     let createdCount = 0;
 
-    for (const [domain, domainTabs] of multiTabDomains.entries()) {
-      if (domainTabs.length > 0) {
-        const color = colors[colorIndex % colors.length];
-        colorIndex++;
+    for (const [targetTitle, domainTabs] of tabsToAddByDomain.entries()) {
+      if (domainTabs.length === 0) continue;
+
+      const existingGroup = existingGroupByTitle.get(targetTitle.toLowerCase());
+
+      if (existingGroup) {
+        // Anexar incrementalmente al grupo existente
         await this.browserTabs.groupTabs(
+          domainTabs.map((t) => t.id),
+          existingGroup.id
+        );
+      } else {
+        // Ordenar alfabéticamente si es "Otros"
+        if (targetTitle === 'Otros') {
+          domainTabs.sort((a, b) => {
+            const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
+            if (dComp !== 0) return dComp;
+            return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+          });
+        }
+
+        const color = targetTitle === 'Otros' ? 'grey' : colors[colorIndex % colors.length];
+        colorIndex++;
+
+        const newGroupId = await this.browserTabs.groupTabs(
           domainTabs.map((t) => t.id),
           undefined,
           {
-            title: domain,
+            title: targetTitle,
             color,
           }
         );
+
+        if (newGroupId) {
+          existingGroupByTitle.set(targetTitle.toLowerCase(), {
+            id: newGroupId,
+            title: targetTitle,
+            color,
+            collapsed: false,
+            createdAt: Date.now(),
+          });
+        }
         createdCount++;
       }
     }
 
-    // Unificar sitios de 1 pestaña en "Otros" ordenados alfabéticamente
-    if (singleTabs.length > 0) {
-      singleTabs.sort((a, b) => {
-        const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
-        if (dComp !== 0) return dComp;
-        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
-      });
-
-      await this.browserTabs.groupTabs(
-        singleTabs.map((t) => t.id),
-        undefined,
-        {
-          title: 'Otros',
-          color: 'grey',
-        }
-      );
-      createdCount++;
-    }
-
     return {
       groupedCount: tabs.length,
-      groupsCreated: createdCount,
+      groupsCreated: existingGroups.length + createdCount,
     };
   }
 

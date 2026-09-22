@@ -181,6 +181,54 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'docs.sessionsSubtitle': 'Instantáneas completas respaldadas en IndexedDB y chrome.storage.',
     'docs.inboxTitle': 'Bandeja de Curaduría de Enlaces Asíncrona',
     'docs.inboxSubtitle': 'Guarda enlaces para procesar después sin saturar la memoria de tu navegador.',
+
+    // Taxonomy Laya Core
+    'taxonomy.code': 'Código',
+    'taxonomy.research': 'Investigación',
+    'taxonomy.web': 'Web & UI',
+    'taxonomy.media': 'Multimedia',
+    'taxonomy.data': 'Datos',
+    'taxonomy.finance': 'Finanzas',
+    'taxonomy.system': 'Sistema',
+    'taxonomy.creative': 'Creatividad',
+    'taxonomy.memory': 'Notas & Wiki',
+    'taxonomy.gaming': 'Gaming',
+    'taxonomy.general': 'General',
+
+    // Sidebar
+    'sidebar.subtitle': 'Gestor Ejecutivo de Pestañas',
+    'sidebar.browser': 'Navegador',
+    'sidebar.gmailBackup': 'Respaldo con Gmail',
+    'sidebar.viewsModules': 'Vistas y Módulos',
+    'sidebar.guideBadge': 'Guía',
+
+    // RAM & Device Metrics
+    'kpi.deviceRam': 'RAM del Dispositivo',
+    'kpi.ramRecoveredFromTotal': 'recuperada del equipo',
+    'kpi.approxConsumption': 'Consumo aproximado',
+
+    // Context Menu
+    'context.goToTab': 'Ir a la pestaña en Chrome',
+    'context.moveToGroup': 'Mover a grupo',
+    'context.noGroups': 'No hay grupos creados',
+    'context.createGroupHere': 'Crear nuevo grupo aquí',
+    'context.removeFromGroup': 'Extraer de este grupo',
+    'context.alreadySuspended': 'Ya suspendida (RAM liberada)',
+    'context.suspend': 'Suspender (Liberar RAM)',
+    'context.copyUrl': 'Copiar URL',
+    'context.copied': '¡Copiado!',
+    'context.closeTab': 'Cerrar pestaña',
+
+    // Header Extra
+    'header.gmailBackupBtn': 'Respaldo Gmail',
+    'header.gmailBackupTitle': 'Guardar o sincronizar todo el historial con una cuenta de Gmail',
+    'header.openMenuTitle': 'Abrir Menú General',
+
+    // Common Quantities
+    'common.tabSingular': 'pestaña',
+    'common.tabPlural': 'pestañas',
+    'common.groupSingular': 'grupo',
+    'common.groupPlural': 'grupos',
   },
 
   en: {
@@ -363,6 +411,54 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'docs.sessionsSubtitle': 'Full browser snapshots backed up to IndexedDB and chrome.storage.',
     'docs.inboxTitle': 'Asynchronous Link Curation Inbox',
     'docs.inboxSubtitle': 'Save links for later reading without bogging down browser memory.',
+
+    // Taxonomy Laya Core
+    'taxonomy.code': 'Code',
+    'taxonomy.research': 'Research',
+    'taxonomy.web': 'Web & UI',
+    'taxonomy.media': 'Media',
+    'taxonomy.data': 'Data',
+    'taxonomy.finance': 'Finance',
+    'taxonomy.system': 'System',
+    'taxonomy.creative': 'Creative',
+    'taxonomy.memory': 'Notes & Wiki',
+    'taxonomy.gaming': 'Gaming',
+    'taxonomy.general': 'General',
+
+    // Sidebar
+    'sidebar.subtitle': 'Executive Tab Manager',
+    'sidebar.browser': 'Browser',
+    'sidebar.gmailBackup': 'Backup with Gmail',
+    'sidebar.viewsModules': 'Views & Modules',
+    'sidebar.guideBadge': 'Guide',
+
+    // RAM & Device Metrics
+    'kpi.deviceRam': 'Device RAM',
+    'kpi.ramRecoveredFromTotal': 'recovered from device',
+    'kpi.approxConsumption': 'Approx. consumption',
+
+    // Context Menu
+    'context.goToTab': 'Go to tab in Chrome',
+    'context.moveToGroup': 'Move to group',
+    'context.noGroups': 'No groups created',
+    'context.createGroupHere': 'Create new group here',
+    'context.removeFromGroup': 'Remove from group',
+    'context.alreadySuspended': 'Already suspended (RAM freed)',
+    'context.suspend': 'Suspend (Free RAM)',
+    'context.copyUrl': 'Copy URL',
+    'context.copied': 'Copied!',
+    'context.closeTab': 'Close tab',
+
+    // Header Extra
+    'header.gmailBackupBtn': 'Gmail Backup',
+    'header.gmailBackupTitle': 'Save or sync all history with a Gmail account',
+    'header.openMenuTitle': 'Open General Menu',
+
+    // Common Quantities
+    'common.tabSingular': 'tab',
+    'common.tabPlural': 'tabs',
+    'common.groupSingular': 'group',
+    'common.groupPlural': 'groups',
   },
 
   ru: {
@@ -545,6 +641,54 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'docs.sessionsSubtitle': 'Снимки сессий с резервированием в IndexedDB и chrome.storage.',
     'docs.inboxTitle': 'Асинхронный накопитель ссылок',
     'docs.inboxSubtitle': 'Сохраняйте ссылки на потом без перегрузки памяти браузера.',
+
+    // Taxonomy Laya Core
+    'taxonomy.code': 'Код',
+    'taxonomy.research': 'Исследования',
+    'taxonomy.web': 'Веб и UI',
+    'taxonomy.media': 'Медиа',
+    'taxonomy.data': 'Данные',
+    'taxonomy.finance': 'Финансы',
+    'taxonomy.system': 'Система',
+    'taxonomy.creative': 'Творчество',
+    'taxonomy.memory': 'Заметки и Вики',
+    'taxonomy.gaming': 'Игры',
+    'taxonomy.general': 'Общее',
+
+    // Sidebar
+    'sidebar.subtitle': 'Исполнительный менеджер вкладок',
+    'sidebar.browser': 'Браузер',
+    'sidebar.gmailBackup': 'Резервная копия Gmail',
+    'sidebar.viewsModules': 'Виды и модули',
+    'sidebar.guideBadge': 'Гид',
+
+    // RAM & Device Metrics
+    'kpi.deviceRam': 'ОЗУ устройства',
+    'kpi.ramRecoveredFromTotal': 'освобождено от общего объема',
+    'kpi.approxConsumption': 'Примерное потребление',
+
+    // Context Menu
+    'context.goToTab': 'Перейти к вкладке в Chrome',
+    'context.moveToGroup': 'Переместить в группу',
+    'context.noGroups': 'Нет созданных групп',
+    'context.createGroupHere': 'Создать группу здесь',
+    'context.removeFromGroup': 'Удалить из этой группы',
+    'context.alreadySuspended': 'Уже заморожена (ОЗУ освобождено)',
+    'context.suspend': 'Заморозить (Освободить ОЗУ)',
+    'context.copyUrl': 'Копировать URL',
+    'context.copied': 'Скопировано!',
+    'context.closeTab': 'Закрыть вкладку',
+
+    // Header Extra
+    'header.gmailBackupBtn': 'Резервная копия',
+    'header.gmailBackupTitle': 'Сохранить или синхронизировать историю с аккаунтом Gmail',
+    'header.openMenuTitle': 'Открыть общее меню',
+
+    // Common Quantities
+    'common.tabSingular': 'вкладка',
+    'common.tabPlural': 'вкладок',
+    'common.groupSingular': 'группа',
+    'common.groupPlural': 'групп',
   },
 
   zh: {
@@ -727,5 +871,53 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'docs.sessionsSubtitle': '完整浏览器状态同步备份至 IndexedDB 与 chrome.storage。',
     'docs.inboxTitle': '异步链接策展与收集箱',
     'docs.inboxSubtitle': '随手收藏链接稍后阅读，不再堆积海量常驻标签。',
+
+    // Taxonomy Laya Core
+    'taxonomy.code': '代码开发',
+    'taxonomy.research': '文献调研',
+    'taxonomy.web': '网页与UI',
+    'taxonomy.media': '流媒体与视听',
+    'taxonomy.data': '数据与统计',
+    'taxonomy.finance': '金融与理财',
+    'taxonomy.system': '系统与运维',
+    'taxonomy.creative': '创意设计',
+    'taxonomy.memory': '笔记与知识库',
+    'taxonomy.gaming': '游戏娱乐',
+    'taxonomy.general': '常规网页',
+
+    // Sidebar
+    'sidebar.subtitle': '高级标签页管理控制台',
+    'sidebar.browser': '浏览器环境',
+    'sidebar.gmailBackup': 'Gmail 云端备份',
+    'sidebar.viewsModules': '视图与功能模块',
+    'sidebar.guideBadge': '指南',
+
+    // RAM & Device Metrics
+    'kpi.deviceRam': '设备物理内存',
+    'kpi.ramRecoveredFromTotal': '已从设备总量中回收',
+    'kpi.approxConsumption': '预估内存占用',
+
+    // Context Menu
+    'context.goToTab': '跳转到 Chrome 对应标签页',
+    'context.moveToGroup': '移动至指定分组',
+    'context.noGroups': '尚未创建任何分组',
+    'context.createGroupHere': '在此创建新分组',
+    'context.removeFromGroup': '从当前分组中移出',
+    'context.alreadySuspended': '已处于休眠状态 (RAM已释放)',
+    'context.suspend': '立即休眠 (释放 RAM)',
+    'context.copyUrl': '复制网址',
+    'context.copied': '已复制！',
+    'context.closeTab': '关闭此标签页',
+
+    // Header Extra
+    'header.gmailBackupBtn': 'Gmail 备份',
+    'header.gmailBackupTitle': '保存或将完整历史记录同步至 Gmail 邮箱',
+    'header.openMenuTitle': '打开全局主菜单',
+
+    // Common Quantities
+    'common.tabSingular': '个标签页',
+    'common.tabPlural': '个标签页',
+    'common.groupSingular': '个分组',
+    'common.groupPlural': '个分组',
   },
 };

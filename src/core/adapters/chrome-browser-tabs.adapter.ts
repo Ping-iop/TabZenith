@@ -73,7 +73,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
         // Si el navegador requiere que complete la carga inicial antes de descartar
         const onUpdateListener = (
           updatedId: number,
-          changeInfo: chrome.tabs.TabChangeInfo
+          changeInfo: { status?: string }
         ) => {
           if (updatedId === tabId && changeInfo.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(onUpdateListener);

@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  LayoutDashboard,
-  Layers,
-  Inbox,
-  History,
   Search,
-  Sparkles,
-  Cpu,
   CheckCircle,
   X,
   AlertTriangle,
   ExternalLink,
-  Star,
-  Pin,
   Copy,
   Menu,
   Mail,
@@ -288,17 +280,17 @@ export const DashboardApp: React.FC = () => {
               type="button"
               onClick={() => setIsGmailBackupOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-transparent hover:from-rose-500/20 hover:to-amber-500/20 text-xs text-rose-300 hover:text-rose-200 border border-rose-500/30 transition-all cursor-pointer font-medium shadow-sm"
-              title="Guardar o sincronizar todo el historial con una cuenta de Gmail"
+              title={t('header.gmailBackupTitle')}
             >
               <Mail className="w-3.5 h-3.5 text-rose-400" />
-              <span className="hidden sm:inline font-semibold">Respaldo Gmail</span>
+              <span className="hidden sm:inline font-semibold">{t('header.gmailBackupBtn')}</span>
             </button>
 
             <LanguageSelector />
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 rounded-xl bg-surface-subtle hover:bg-surface-elevated text-content-secondary border border-surface-border cursor-pointer"
-              title="Abrir Menú General"
+              title={t('header.openMenuTitle')}
             >
               <Menu className="w-5 h-5" />
             </button>

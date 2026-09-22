@@ -176,5 +176,47 @@ export type TranslationKey =
   | 'docs.sessionsTitle'
   | 'docs.sessionsSubtitle'
   | 'docs.inboxTitle'
-  | 'docs.inboxSubtitle';
+  | 'docs.inboxSubtitle'
+  // Taxonomy Laya Core
+  | 'taxonomy.code'
+  | 'taxonomy.research'
+  | 'taxonomy.web'
+  | 'taxonomy.media'
+  | 'taxonomy.data'
+  | 'taxonomy.finance'
+  | 'taxonomy.system'
+  | 'taxonomy.creative'
+  | 'taxonomy.memory'
+  | 'taxonomy.gaming'
+  | 'taxonomy.general'
+  // Sidebar
+  | 'sidebar.subtitle'
+  | 'sidebar.browser'
+  | 'sidebar.gmailBackup'
+  | 'sidebar.viewsModules'
+  | 'sidebar.guideBadge'
+  // RAM & Device Metrics
+  | 'kpi.deviceRam'
+  | 'kpi.ramRecoveredFromTotal'
+  | 'kpi.approxConsumption'
+  // Context Menu
+  | 'context.goToTab'
+  | 'context.moveToGroup'
+  | 'context.noGroups'
+  | 'context.createGroupHere'
+  | 'context.removeFromGroup'
+  | 'context.alreadySuspended'
+  | 'context.suspend'
+  | 'context.copyUrl'
+  | 'context.copied'
+  | 'context.closeTab'
+  // Header Extra
+  | 'header.gmailBackupBtn'
+  | 'header.gmailBackupTitle'
+  | 'header.openMenuTitle'
+  // Common Quantities
+  | 'common.tabSingular'
+  | 'common.tabPlural'
+  | 'common.groupSingular'
+  | 'common.groupPlural';
 

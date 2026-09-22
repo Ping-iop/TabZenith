@@ -3,17 +3,12 @@ import {
   X,
   BookOpen,
   Copy,
-  Layers,
   Sparkles,
   Snowflake,
   History,
   Inbox,
   RotateCcw,
-  CheckCircle,
-  Cpu,
   Globe,
-  Star,
-  Pin,
   ShieldCheck,
 } from 'lucide-react';
 import { useI18n } from '@/core/i18n/I18nContext';
