@@ -1,6 +1,6 @@
 {
   "name": "tabzenith",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TabZenith - Gestor Inteligente de Pestañas y Dashboard Gerencial con Laya Core en CPU",
   "type": "module",
   "scripts": {
