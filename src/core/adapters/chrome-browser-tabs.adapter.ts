@@ -153,7 +153,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
     }
 
     const options: chrome.tabs.GroupOptions = {
-      tabIds: numericTabIds,
+      tabIds: numericTabIds as [number, ...number[]],
     };
 
     if (groupId) {
@@ -183,7 +183,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
       .filter((id) => !Number.isNaN(id));
 
     if (numericTabIds.length > 0) {
-      await chrome.tabs.ungroup(numericTabIds);
+      await chrome.tabs.ungroup(numericTabIds as [number, ...number[]]);
     }
   }
 
@@ -217,9 +217,9 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
 
     if (closeTabs) {
       await this.closeTabs(tabIds);
-    } else {
+    } else if (tabIds.length > 0) {
       const numericIds = tabIds.map(Number);
-      await chrome.tabs.ungroup(numericIds);
+      await chrome.tabs.ungroup(numericIds as [number, ...number[]]);
     }
   }
 

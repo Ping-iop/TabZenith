@@ -5,7 +5,6 @@ import {
   FolderInput,
   Trash2,
   FileDown,
-  Layers,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';

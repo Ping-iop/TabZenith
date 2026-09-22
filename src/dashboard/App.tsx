@@ -26,7 +26,6 @@ import { GroupManagementModal } from '@/ui/organisms/GroupManagementModal';
 import { SearchResultsView } from '@/ui/organisms/SearchResultsView';
 
 import { Input } from '@/ui/atoms/Input';
-import { Button } from '@/ui/atoms/Button';
 import { TabGroup } from '@/core/domain/group.types';
 import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
 import { container } from '@/core/di/container';
@@ -53,7 +52,11 @@ export const DashboardApp: React.FC = () => {
     sessions,
     stashCurrentSession,
     restoreSession,
+    restoreSpecificGroup,
+    restoreSelectedTabs,
+    removeTabFromSession,
     deleteSession,
+    refresh: refreshSessions,
   } = useSessions();
 
   const {
@@ -74,7 +77,8 @@ export const DashboardApp: React.FC = () => {
     actionFeedback,
     clearFeedback,
     manualClassify,
-    manualGroup,
+    groupByTopic,
+    groupByDomain,
     freezeInactiveTabs,
     deduplicateTabs,
     tabTaxonomyMap,

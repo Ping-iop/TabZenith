@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronRight,
   Edit2,
-  Trash2,
   FolderPlus,
   Layers,
   Globe,

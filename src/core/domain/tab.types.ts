@@ -1,5 +1,3 @@
-import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
-
 export interface TabItem {
   readonly id: string;
   readonly chromeTabId?: number;

@@ -24,7 +24,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (targetUrl) {
       // Guardar temporalmente en storage local para que el inbox lo absorba
       const result = await chrome.storage.local.get(['pending_inbox_links']);
-      const currentPending: string[] = result.pending_inbox_links || [];
+      const currentPending: string[] = (result.pending_inbox_links as string[]) || [];
       currentPending.push(targetUrl);
       await chrome.storage.local.set({ pending_inbox_links: currentPending });
 

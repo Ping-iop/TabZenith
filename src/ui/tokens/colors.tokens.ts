@@ -167,7 +167,7 @@ export const GROUP_COLOR_CLASSES: Record<
  * Traduce con seguridad los 16 colores semánticos a los 9 colores admitidos
  * por la API nativa de Chrome TabGroups.
  */
-export function toNativeChromeTabGroupColor(color: ChromeGroupColor): chrome.tabGroups.Color {
+export function toNativeChromeTabGroupColor(color: ChromeGroupColor): `${chrome.tabGroups.Color}` {
   switch (color) {
     case 'blue':
     case 'indigo':

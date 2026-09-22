@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   History,
   RotateCcw,
   Trash2,
   Calendar,
-  Layers,
   ChevronDown,
   ChevronRight,
   ExternalLink,
@@ -18,9 +17,7 @@ import {
 import { SessionSnapshot } from '@/core/domain/session.types';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
-import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
 import { GROUP_COLOR_CLASSES } from '../tokens/colors.tokens';
-import { DomainBadge } from '../molecules/DomainBadge';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Card } from '../atoms/Card';

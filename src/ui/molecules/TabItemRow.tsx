@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Snowflake } from 'lucide-react';
+import { Globe, Snowflake, X } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
