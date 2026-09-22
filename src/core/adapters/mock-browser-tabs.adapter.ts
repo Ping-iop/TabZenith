@@ -131,6 +131,14 @@ export class MockBrowserTabsAdapter implements IBrowserTabsPort {
     return newTab;
   }
 
+  async activateTab(tabId: string): Promise<void> {
+    this.tabs = this.tabs.map((t) => ({
+      ...t,
+      active: t.id === tabId,
+    }));
+    this.notify();
+  }
+
   async closeTabs(tabIds: readonly string[]): Promise<void> {
     this.tabs = this.tabs.filter((t) => !(tabIds.includes(t.id) && !t.pinned));
     this.notify();

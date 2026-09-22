@@ -80,6 +80,11 @@ export function useTabs() {
     return tab;
   }, [fetchTabsAndGroups]);
 
+  const activateTab = useCallback(async (tabId: string) => {
+    await container.browserTabs.activateTab(tabId);
+    await fetchTabsAndGroups();
+  }, [fetchTabsAndGroups]);
+
   return {
     tabs,
     groups,
@@ -87,6 +92,7 @@ export function useTabs() {
     error,
     refresh: fetchTabsAndGroups,
     createTab,
+    activateTab,
     closeTabs,
     suspendTabs,
     moveTabToGroup,

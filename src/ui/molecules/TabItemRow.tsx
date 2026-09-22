@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Snowflake, X, Star } from 'lucide-react';
+import { Globe, Snowflake, X, Star, ExternalLink } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
@@ -11,6 +11,7 @@ interface TabItemRowProps {
   tab: TabItem;
   domainTaxonomy?: MarpDomainTaxonomy;
   availableGroups: readonly TabGroup[];
+  onActivate?: () => void;
   onMoveToGroup: (groupId: string) => void;
   onCreateNewGroup: () => void;
   onUngroup: () => void;
@@ -28,6 +29,7 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
   tab,
   domainTaxonomy,
   availableGroups,
+  onActivate,
   onMoveToGroup,
   onCreateNewGroup,
   onUngroup,
@@ -84,15 +86,26 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
         {/* Título y Dominio */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <a
-              href={tab.url}
-              target="_blank"
-              rel="noreferrer"
-              title={tab.title}
-              className="font-medium text-content-primary hover:text-brand-primary transition-colors truncate block"
-            >
-              {tab.title}
-            </a>
+            {onActivate ? (
+              <button
+                type="button"
+                onClick={onActivate}
+                title={`Ir a esta pestaña en Chrome: ${tab.title}`}
+                className="font-medium text-left text-content-primary hover:text-brand-primary transition-colors truncate block"
+              >
+                {tab.title}
+              </button>
+            ) : (
+              <a
+                href={tab.url}
+                target="_blank"
+                rel="noreferrer"
+                title={tab.title}
+                className="font-medium text-content-primary hover:text-brand-primary transition-colors truncate block"
+              >
+                {tab.title}
+              </a>
+            )}
             {tab.discarded && (
               <span
                 title="Pestaña suspendida (RAM liberada)"
@@ -124,11 +137,22 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
             <Star className={cn('w-3.5 h-3.5', isFavorite ? 'fill-amber-400' : '')} />
           </button>
         )}
+        {onActivate && (
+          <button
+            type="button"
+            onClick={onActivate}
+            title="Ir a esta pestaña en Chrome"
+            className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-brand-primary/10 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        )}
         <ContextMenu
           tabId={tab.id}
           tabUrl={tab.url}
           currentGroupId={tab.groupId}
           availableGroups={availableGroups}
+          onActivate={onActivate}
           onMoveToGroup={onMoveToGroup}
           onCreateNewGroup={onCreateNewGroup}
           onUngroup={onUngroup}

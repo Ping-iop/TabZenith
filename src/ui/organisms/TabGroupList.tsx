@@ -26,6 +26,7 @@ interface TabGroupListProps {
   tabs: readonly TabItem[];
   groups: readonly TabGroup[];
   tabTaxonomyMap: ReadonlyMap<string, MarpDomainTaxonomy>;
+  onActivateTab?: (tabId: string) => void;
   onMoveToGroup: (tabId: string, groupId: string) => void;
   onCreateNewGroupWithTab: (tabId: string) => void;
   onUngroupTab: (tabId: string) => void;
@@ -44,6 +45,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   tabs,
   groups,
   tabTaxonomyMap,
+  onActivateTab,
   onMoveToGroup,
   onCreateNewGroupWithTab,
   onUngroupTab,
@@ -255,6 +257,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                       tab={tab}
                       domainTaxonomy={tabTaxonomyMap.get(tab.id)}
                       availableGroups={groups}
+                      onActivate={onActivateTab ? () => onActivateTab(tab.id) : undefined}
                       onMoveToGroup={(gId) => onMoveToGroup(tab.id, gId)}
                       onCreateNewGroup={() => onCreateNewGroupWithTab(tab.id)}
                       onUngroup={() => onUngroupTab(tab.id)}
@@ -295,6 +298,7 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 tab={tab}
                 domainTaxonomy={tabTaxonomyMap.get(tab.id)}
                 availableGroups={groups}
+                onActivate={onActivateTab ? () => onActivateTab(tab.id) : undefined}
                 onMoveToGroup={(gId) => onMoveToGroup(tab.id, gId)}
                 onCreateNewGroup={() => onCreateNewGroupWithTab(tab.id)}
                 onUngroup={() => onUngroupTab(tab.id)}

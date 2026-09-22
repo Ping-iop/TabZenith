@@ -111,6 +111,21 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
     };
   }
 
+  async activateTab(tabId: string): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.tabs) return;
+    const numericId = Number(tabId);
+    if (Number.isNaN(numericId)) return;
+
+    try {
+      const tab = await chrome.tabs.update(numericId, { active: true });
+      if (tab?.windowId && chrome.windows?.update) {
+        await chrome.windows.update(tab.windowId, { focused: true });
+      }
+    } catch (err) {
+      console.warn(`No se pudo activar la pestaña ${tabId}:`, err);
+    }
+  }
+
   async closeTabs(tabIds: readonly string[]): Promise<void> {
     if (typeof chrome === 'undefined' || !chrome.tabs) return;
 

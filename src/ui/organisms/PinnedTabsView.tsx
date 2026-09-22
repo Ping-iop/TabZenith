@@ -141,8 +141,8 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
-                      onClick={() => container.browserTabs.createTab(tab.url, true)}
-                      title={tab.url}
+                      onClick={() => container.browserTabs.activateTab(tab.id)}
+                      title={`Ir a esta pestaña en Chrome: ${tab.title}`}
                       className="font-medium text-content-primary hover:text-brand-primary truncate cursor-pointer block"
                     >
                       {tab.title}
@@ -203,8 +203,8 @@ export const PinnedTabsView: React.FC<PinnedTabsViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => container.browserTabs.createTab(tab.url, true)}
-                  title="Abrir en Chrome"
+                  onClick={() => container.browserTabs.activateTab(tab.id)}
+                  title="Ir a esta pestaña en Chrome"
                   className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-surface-elevated transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />

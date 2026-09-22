@@ -6,6 +6,7 @@ import {
   Trash2,
   FileDown,
   Star,
+  ExternalLink,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
@@ -21,6 +22,7 @@ interface ExecutiveDataGridProps {
   tabs: readonly TabItem[];
   groups: readonly TabGroup[];
   tabTaxonomyMap: ReadonlyMap<string, MarpDomainTaxonomy>;
+  onActivateTab?: (tabId: string) => void;
   onBatchSuspend: (tabIds: readonly string[]) => void;
   onBatchClose: (tabIds: readonly string[]) => void;
   onBatchMoveToGroup: (tabIds: readonly string[], groupId: string) => void;
@@ -32,6 +34,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
   tabs,
   groups,
   tabTaxonomyMap,
+  onActivateTab,
   onBatchSuspend,
   onBatchClose,
   onBatchMoveToGroup,
@@ -208,12 +211,13 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
               <th className="p-3">{t('grid.colCategory')}</th>
               <th className="p-3">{t('grid.colGroup')}</th>
               <th className="p-3">{t('grid.colRam')}</th>
+              <th className="p-3 w-12 text-center" title="Ir a la pestaña en Chrome">Ir</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-border">
             {filteredTabs.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-content-muted">
+                <td colSpan={8} className="p-6 text-center text-content-muted">
                   {t('action.filterPlaceholder')}
                 </td>
               </tr>
@@ -261,14 +265,25 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                       )}
                     </td>
                     <td className="p-3 max-w-xs md:max-w-md">
-                      <a
-                        href={tab.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-content-primary hover:text-brand-primary truncate block"
-                      >
-                        {tab.title}
-                      </a>
+                      {onActivateTab ? (
+                        <button
+                          type="button"
+                          onClick={() => onActivateTab(tab.id)}
+                          title={`Ir a esta pestaña en Chrome: ${tab.title}`}
+                          className="font-medium text-left text-content-primary hover:text-brand-primary truncate block max-w-full"
+                        >
+                          {tab.title}
+                        </button>
+                      ) : (
+                        <a
+                          href={tab.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-medium text-content-primary hover:text-brand-primary truncate block"
+                        >
+                          {tab.title}
+                        </a>
+                      )}
                       <span className="text-[11px] text-content-muted truncate block">
                         {tab.url}
                       </span>
@@ -297,6 +312,18 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                         <span className="text-emerald-400 font-medium">{t('grid.statusActive')}</span>
                       ) : (
                         <span className="text-content-secondary">{t('grid.statusInRam')}</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
+                      {onActivateTab && (
+                        <button
+                          type="button"
+                          onClick={() => onActivateTab(tab.id)}
+                          title="Ir a esta pestaña en Chrome"
+                          className="p-1.5 rounded hover:bg-brand-primary/10 text-content-muted hover:text-brand-primary transition-colors inline-flex items-center justify-center"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
                       )}
                     </td>
                   </tr>

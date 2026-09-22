@@ -7,12 +7,14 @@ interface SearchResultsViewProps {
   results: readonly SearchResultMatch[];
   query: string;
   onOpenUrl: (url: string) => void;
+  onActivateTab?: (tabId: string) => void;
 }
 
 export const SearchResultsView: React.FC<SearchResultsViewProps> = ({
   results,
   query,
   onOpenUrl,
+  onActivateTab,
 }) => {
   return (
     <Card className="p-4 bg-surface-card border-brand-primary/40 shadow-elevated space-y-3">
@@ -48,9 +50,25 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <span className="font-medium text-content-primary truncate block">
-                      {data.title}
-                    </span>
+                    {isTab && onActivateTab ? (
+                      <button
+                        type="button"
+                        onClick={() => onActivateTab(data.id)}
+                        title={`Ir a esta pestaña en Chrome: ${data.title}`}
+                        className="font-medium text-left text-content-primary hover:text-brand-primary truncate block max-w-full"
+                      >
+                        {data.title}
+                      </button>
+                    ) : (
+                      <a
+                        href={data.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-content-primary hover:text-brand-primary truncate block"
+                      >
+                        {data.title}
+                      </a>
+                    )}
                     <span className="text-[11px] text-content-muted truncate block">
                       {data.url}
                     </span>
@@ -58,7 +76,14 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({
                 </div>
 
                 <button
-                  onClick={() => onOpenUrl(data.url)}
+                  onClick={() => {
+                    if (isTab && onActivateTab) {
+                      onActivateTab(data.id);
+                    } else {
+                      onOpenUrl(data.url);
+                    }
+                  }}
+                  title={isTab ? 'Ir a esta pestaña en Chrome' : 'Abrir enlace'}
                   className="p-1.5 rounded text-content-muted hover:text-brand-primary hover:bg-surface-card transition-colors flex-shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />

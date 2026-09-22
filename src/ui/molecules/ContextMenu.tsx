@@ -8,6 +8,7 @@ import {
   Trash2,
   FolderMinus,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { TabGroup } from '@/core/domain/group.types';
 import { GROUP_COLOR_CLASSES } from '../tokens/colors.tokens';
@@ -18,6 +19,7 @@ export interface ContextMenuProps {
   tabUrl: string;
   currentGroupId?: string;
   availableGroups: readonly TabGroup[];
+  onActivate?: () => void;
   onMoveToGroup: (groupId: string) => void;
   onCreateNewGroup: () => void;
   onUngroup: () => void;
@@ -30,6 +32,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   tabUrl,
   currentGroupId,
   availableGroups,
+  onActivate,
   onMoveToGroup,
   onCreateNewGroup,
   onUngroup,
@@ -82,6 +85,23 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
       {isOpen && (
         <div className="absolute right-0 mt-1 w-56 rounded-lg bg-surface-card border border-surface-border shadow-dropdown py-1 z-50 text-xs text-content-primary animate-in fade-in zoom-in-95">
+          {/* Ir a la pestaña en Chrome */}
+          {onActivate && (
+            <>
+              <button
+                onClick={() => {
+                  onActivate();
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-brand-primary/10 text-brand-primary font-medium transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Ir a la pestaña en Chrome</span>
+              </button>
+              <div className="my-1 border-t border-surface-border" />
+            </>
+          )}
+
           {/* Mover a grupo existente */}
           <div className="relative">
             <button

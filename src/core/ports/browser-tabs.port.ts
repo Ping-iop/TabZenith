@@ -6,6 +6,7 @@ export interface IBrowserTabsPort {
   getOpenTabs(): Promise<readonly TabItem[]>;
   getTabGroups(): Promise<readonly TabGroup[]>;
   createTab(url: string, active?: boolean, discard?: boolean): Promise<TabItem>;
+  activateTab(tabId: string): Promise<void>;
   closeTabs(tabIds: readonly string[]): Promise<void>;
   discardTabs(tabIds: readonly string[]): Promise<void>; // Congela pestañas para recuperar RAM
   groupTabs(

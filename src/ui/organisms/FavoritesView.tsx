@@ -192,8 +192,14 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
-                      onClick={() => container.browserTabs.createTab(item.url, true)}
-                      title={item.url}
+                      onClick={() => {
+                        if (item.isOpen && item.tabId) {
+                          container.browserTabs.activateTab(item.tabId);
+                        } else {
+                          container.browserTabs.createTab(item.url, true);
+                        }
+                      }}
+                      title={item.isOpen ? `Ir a esta pestaña en Chrome: ${item.title}` : `Abrir en Chrome: ${item.title}`}
                       className="font-medium text-content-primary hover:text-brand-primary truncate cursor-pointer block"
                     >
                       {item.title}
@@ -237,8 +243,14 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => container.browserTabs.createTab(item.url, true)}
-                  title="Abrir en Chrome"
+                  onClick={() => {
+                    if (item.isOpen && item.tabId) {
+                      container.browserTabs.activateTab(item.tabId);
+                    } else {
+                      container.browserTabs.createTab(item.url, true);
+                    }
+                  }}
+                  title={item.isOpen ? 'Ir a esta pestaña en Chrome' : 'Abrir en Chrome'}
                   className="p-1 rounded text-content-muted hover:text-brand-primary hover:bg-surface-elevated transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />

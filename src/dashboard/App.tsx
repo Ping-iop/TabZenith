@@ -65,6 +65,7 @@ export const DashboardApp: React.FC = () => {
   const {
     tabs,
     groups,
+    activateTab,
     closeTabs,
     suspendTabs,
     moveTabToGroup,
@@ -345,6 +346,7 @@ export const DashboardApp: React.FC = () => {
             results={searchResults}
             query={query}
             onOpenUrl={(url) => container.browserTabs.createTab(url, true)}
+            onActivateTab={activateTab}
           />
         )}
 
@@ -374,6 +376,7 @@ export const DashboardApp: React.FC = () => {
               tabs={displayedTabs}
               groups={groups}
               tabTaxonomyMap={tabTaxonomyMap}
+              onActivateTab={activateTab}
               onBatchSuspend={suspendTabs}
               onBatchClose={handleBatchCloseTabs}
               onBatchMoveToGroup={(tabIds, groupId) => {
@@ -391,6 +394,7 @@ export const DashboardApp: React.FC = () => {
             tabs={displayedTabs}
             groups={groups}
             tabTaxonomyMap={tabTaxonomyMap}
+            onActivateTab={activateTab}
             onMoveToGroup={(tabId, groupId) => moveTabToGroup(tabId, groupId)}
             onCreateNewGroupWithTab={(tabId) => handleOpenCreateGroup(tabId)}
             onUngroupTab={(tabId) => ungroupTabs([tabId])}
