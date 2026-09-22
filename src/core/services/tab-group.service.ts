@@ -106,9 +106,11 @@ export class TabGroupService {
 
   /**
    * Restaura una sesión completa en Chrome recreando grupos nativos.
+   * Todas las pestañas se restauran CONGELADAS (discarded) para evitar saturación de RAM/CPU.
    */
   async restoreSession(session: SessionSnapshot): Promise<void> {
     const groupMapping = new Map<string, string>(); // idAntiguo -> idNuevoChrome
+    const allCreatedTabIds: string[] = [];
 
     for (const group of session.groups) {
       const tabsForGroup = session.tabs.filter((t) => t.groupId === group.id);
@@ -116,8 +118,10 @@ export class TabGroupService {
 
       const createdTabIds: string[] = [];
       for (const tab of tabsForGroup) {
-        const created = await this.browserTabs.createTab(tab.url, false);
+        // active: false, discard: true (congelada en RAM)
+        const created = await this.browserTabs.createTab(tab.url, false, true);
         createdTabIds.push(created.id);
+        allCreatedTabIds.push(created.id);
       }
 
       const newGroupId = await this.browserTabs.groupTabs(createdTabIds, undefined, {
@@ -131,12 +135,19 @@ export class TabGroupService {
       (t) => !t.groupId || !groupMapping.has(t.groupId)
     );
     for (const tab of ungroupedTabs) {
-      await this.browserTabs.createTab(tab.url, false);
+      // active: false, discard: true (congelada en RAM)
+      const created = await this.browserTabs.createTab(tab.url, false, true);
+      allCreatedTabIds.push(created.id);
+    }
+
+    // Refuerzo de descarte en bloque para garantizar que no ocupen memoria
+    if (allCreatedTabIds.length > 0) {
+      await this.browserTabs.discardTabs(allCreatedTabIds);
     }
   }
 
   /**
-   * Restaura ÚNICAMENTE un grupo específico de una sesión archivada.
+   * Restaura ÚNICAMENTE un grupo específico de una sesión archivada (con pestañas congeladas).
    */
   async restoreSpecificGroup(
     group: TabGroup,
@@ -144,24 +155,32 @@ export class TabGroupService {
   ): Promise<string> {
     const createdTabIds: string[] = [];
     for (const tab of tabs) {
-      const created = await this.browserTabs.createTab(tab.url, false);
+      const created = await this.browserTabs.createTab(tab.url, false, true);
       createdTabIds.push(created.id);
     }
 
     if (createdTabIds.length === 0) return '';
 
-    return await this.browserTabs.groupTabs(createdTabIds, undefined, {
+    const newGroupId = await this.browserTabs.groupTabs(createdTabIds, undefined, {
       title: group.title,
       color: group.color,
     });
+
+    await this.browserTabs.discardTabs(createdTabIds);
+    return newGroupId;
   }
 
   /**
-   * Restaura ÚNICAMENTE pestañas individuales seleccionadas.
+   * Restaura ÚNICAMENTE pestañas individuales seleccionadas (congeladas en RAM).
    */
   async restoreSelectedTabs(tabs: readonly TabItem[]): Promise<void> {
+    const createdIds: string[] = [];
     for (const tab of tabs) {
-      await this.browserTabs.createTab(tab.url, false);
+      const created = await this.browserTabs.createTab(tab.url, false, true);
+      createdIds.push(created.id);
+    }
+    if (createdIds.length > 0) {
+      await this.browserTabs.discardTabs(createdIds);
     }
   }
 

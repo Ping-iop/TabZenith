@@ -14,11 +14,13 @@ import {
   Star,
   Pin,
   Copy,
+  Menu,
 } from 'lucide-react';
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
 import { useInbox } from '@/core/hooks/useInbox';
 import { useFavorites } from '@/core/hooks/useFavorites';
+import { useClosedTabs } from '@/core/hooks/useClosedTabs';
 import { useExecutiveDashboard } from '@/core/hooks/useExecutiveDashboard';
 import { useSmartSearch } from '@/core/hooks/useSmartSearch';
 import { useI18n } from '@/core/i18n/I18nContext';
@@ -32,6 +34,9 @@ import { FavoritesView } from '@/ui/organisms/FavoritesView';
 import { PinnedTabsView } from '@/ui/organisms/PinnedTabsView';
 import { LinkInboxPanel } from '@/ui/organisms/LinkInboxPanel';
 import { SessionsView } from '@/ui/organisms/SessionsView';
+import { ClosedTabsView } from '@/ui/organisms/ClosedTabsView';
+import { GeneralMenuSidebar, DashboardViewType } from '@/ui/organisms/GeneralMenuSidebar';
+import { DocumentationModal } from '@/ui/organisms/DocumentationModal';
 import { GroupManagementModal } from '@/ui/organisms/GroupManagementModal';
 import { SearchResultsView } from '@/ui/organisms/SearchResultsView';
 
@@ -40,22 +45,23 @@ import { TabGroup } from '@/core/domain/group.types';
 import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
 import { container } from '@/core/di/container';
 
-type ActiveView =
-  | 'command_center'
-  | 'groups_tabs'
-  | 'favorites'
-  | 'pinned'
-  | 'inbox'
-  | 'sessions';
-
 export const DashboardApp: React.FC = () => {
   const { t } = useI18n();
-  const [activeView, setActiveView] = useState<ActiveView>('command_center');
+  const [activeView, setActiveView] = useState<DashboardViewType>('command_center');
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLayaConnected, setIsLayaConnected] = useState<boolean | null>(null);
   const [selectedDomainFilters, setSelectedDomainFilters] = useState<string[]>([]);
 
   // Hooks de lógica desacoplada
   const { favorites, favoriteCount, toggleFavorite, isFavorite } = useFavorites();
+  const {
+    closedTabs,
+    recordClosedTabs,
+    restoreClosedTab,
+    restoreAllClosedTabs,
+    clearClosedTabs,
+  } = useClosedTabs();
   const {
     tabs,
     groups,
@@ -102,6 +108,29 @@ export const DashboardApp: React.FC = () => {
     deduplicateTabs,
     tabTaxonomyMap,
   } = useExecutiveDashboard();
+
+  // Deduplicación con registro en historial para soporte de Deshacer (Undo)
+  const handleDeduplicate = async () => {
+    await deduplicateTabs((closed) => {
+      recordClosedTabs(closed, 'deduplicate');
+    });
+  };
+
+  const handleCloseSingleTab = async (tabId: string) => {
+    const target = tabs.find((t) => t.id === tabId);
+    if (target) {
+      await recordClosedTabs([target], 'manual');
+    }
+    await closeTabs([tabId]);
+  };
+
+  const handleBatchCloseTabs = async (tabIds: readonly string[]) => {
+    const targets = tabs.filter((t) => tabIds.includes(t.id));
+    if (targets.length > 0) {
+      await recordClosedTabs(targets, 'manual');
+    }
+    await closeTabs(tabIds);
+  };
 
   const { query, setQuery, searchResults, hasQuery } = useSmartSearch(tabs, inboxLinks);
 
@@ -205,50 +234,12 @@ export const DashboardApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-base text-content-primary">
-      {/* Barra de Navegación Superior */}
-      <header className="sticky top-0 z-40 bg-surface-card/90 backdrop-blur-md border-b border-surface-border px-6 py-3">
+    <div className="min-h-screen bg-surface-base text-content-primary flex flex-col">
+      {/* Barra de Navegación Superior: Únicamente Buscador y Selector de Idioma */}
+      <header className="sticky top-0 z-30 bg-surface-card/90 backdrop-blur-md border-b border-surface-border px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Logo y Estado del Ecosistema */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-brand-primary to-blue-600 text-white shadow-sm flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold tracking-tight text-content-primary">
-                  {t('header.title')}
-                </h1>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-subtle text-brand-primary border border-brand-border">
-                  {t('header.badge')}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-content-muted">
-                <span className="flex items-center gap-1">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isChromeEnv ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`}
-                  />
-                  <span>{isChromeEnv ? t('header.env.chrome') : t('header.env.mock')}</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1" title="Laya Core Multilingual CPU (port 8092)">
-                  <Cpu className="w-3 h-3 text-brand-primary" />
-                  <span>
-                    {isLayaConnected === null
-                      ? t('header.laya.connecting')
-                      : isLayaConnected
-                      ? t('header.laya.connected')
-                      : t('header.laya.heuristic')}
-                  </span>
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* Buscador Inteligente Central */}
-          <div className="flex-1 max-w-md relative">
+          <div className="flex-1 max-w-2xl relative">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -259,96 +250,31 @@ export const DashboardApp: React.FC = () => {
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="absolute right-2.5 top-2.5 text-content-muted hover:text-content-primary"
+                className="absolute right-2.5 top-2.5 text-content-muted hover:text-content-primary cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Menú de Vistas y Selector de Idioma */}
-          <div className="flex items-center gap-3">
-            <nav className="flex items-center gap-1 bg-surface-subtle p-1 rounded-lg border border-surface-border">
-              <button
-                onClick={() => setActiveView('command_center')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'command_center'
-                    ? 'bg-brand-primary text-content-primary shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                <span>{t('nav.commandCenter')}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('groups_tabs')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'groups_tabs'
-                    ? 'bg-brand-primary text-content-primary shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>{t('nav.groupsTabs')} ({groups.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('favorites')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'favorites'
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span>{t('nav.favorites')} ({favoriteCount})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('pinned')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'pinned'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <Pin className="w-3.5 h-3.5 text-blue-400 fill-blue-400/40" />
-                <span>{t('nav.pinned')} ({pinnedTabs.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('inbox')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'inbox'
-                    ? 'bg-brand-primary text-content-primary shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <Inbox className="w-3.5 h-3.5" />
-                <span>{t('nav.inbox')} ({inboxLinks.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('sessions')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeView === 'sessions'
-                    ? 'bg-brand-primary text-content-primary shadow-sm'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
-                }`}
-              >
-                <History className="w-3.5 h-3.5" />
-                <span>{t('nav.sessions')} ({sessions.length})</span>
-              </button>
-            </nav>
-
+          {/* Selector de Idioma y Menú Móvil */}
+          <div className="flex items-center gap-3 shrink-0">
             <LanguageSelector />
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-xl bg-surface-subtle hover:bg-surface-elevated text-content-secondary border border-surface-border cursor-pointer"
+              title="Abrir Menú General"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Contenedor Principal */}
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {/* Contenedor Flex: Main a la izquierda + Menú General a la derecha */}
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+        {/* Contenedor Principal */}
+        <main className="flex-1 min-w-0 max-w-7xl mx-auto px-6 py-6 space-y-6 w-full">
         {/* Banner de Aviso de Servidor Local de Desarrollo vs Extensión Real */}
         {!isChromeEnv && (
           <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in">
@@ -438,7 +364,7 @@ export const DashboardApp: React.FC = () => {
               onGroupByTopic={groupByTopic}
               onGroupByDomain={groupByDomain}
               onFreezeInactive={freezeInactiveTabs}
-              onDeduplicate={deduplicateTabs}
+              onDeduplicate={handleDeduplicate}
               onStashSession={() => stashCurrentSession()}
               isClassifying={isClassifying}
               isGrouping={isGrouping}
@@ -449,7 +375,7 @@ export const DashboardApp: React.FC = () => {
               groups={groups}
               tabTaxonomyMap={tabTaxonomyMap}
               onBatchSuspend={suspendTabs}
-              onBatchClose={closeTabs}
+              onBatchClose={handleBatchCloseTabs}
               onBatchMoveToGroup={(tabIds, groupId) => {
                 tabIds.forEach((tId) => moveTabToGroup(tId, groupId));
               }}
@@ -469,7 +395,7 @@ export const DashboardApp: React.FC = () => {
             onCreateNewGroupWithTab={(tabId) => handleOpenCreateGroup(tabId)}
             onUngroupTab={(tabId) => ungroupTabs([tabId])}
             onSuspendTab={(tabId) => suspendTabs([tabId])}
-            onCloseTab={(tabId) => closeTabs([tabId])}
+            onCloseTab={handleCloseSingleTab}
             onEditGroup={handleOpenEditGroup}
             onDeleteGroup={deleteGroup}
             onCreateEmptyGroup={() => handleOpenCreateGroup()}
@@ -486,7 +412,7 @@ export const DashboardApp: React.FC = () => {
             openTabs={tabs}
             favoriteUrls={favorites}
             onToggleFavorite={toggleFavorite}
-            onCloseTab={(tabId) => closeTabs([tabId])}
+            onCloseTab={handleCloseSingleTab}
             onSuspendTab={(tabId) => suspendTabs([tabId])}
           />
         )}
@@ -528,17 +454,53 @@ export const DashboardApp: React.FC = () => {
             onToggleFavorite={toggleFavorite}
           />
         )}
+
+        {/* Vista 7: Pestañas Cerradas con Deshacer (Undo) */}
+        {activeView === 'closed_tabs' && (
+          <ClosedTabsView
+            closedTabs={closedTabs}
+            onRestoreTab={restoreClosedTab}
+            onRestoreAll={restoreAllClosedTabs}
+            onClearHistory={clearClosedTabs}
+          />
+        )}
       </main>
 
-      {/* Modal de Gestión de Grupos */}
-      <GroupManagementModal
-        isOpen={isGroupModalOpen}
-        onClose={() => setIsGroupModalOpen(false)}
-        onSave={handleSaveGroupModal}
-        mode={groupModalMode}
-        initialTitle={editingGroup?.title || ''}
-        initialColor={editingGroup?.color || 'blue'}
+      {/* Menú General al lado derecho */}
+      <GeneralMenuSidebar
+        activeView={activeView}
+        onViewChange={setActiveView}
+        onOpenDocs={() => setIsDocsOpen(true)}
+        isChromeEnv={isChromeEnv}
+        isLayaConnected={isLayaConnected}
+        counts={{
+          groups: groups.length,
+          favorites: favoriteCount,
+          pinned: pinnedTabs.length,
+          sessions: sessions.length,
+          inbox: inboxLinks.length,
+          closedTabs: closedTabs.length,
+        }}
+        isOpenMobile={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
     </div>
+
+    {/* Modal de Gestión de Grupos */}
+    <GroupManagementModal
+      isOpen={isGroupModalOpen}
+      onClose={() => setIsGroupModalOpen(false)}
+      onSave={handleSaveGroupModal}
+      mode={groupModalMode}
+      initialTitle={editingGroup?.title || ''}
+      initialColor={editingGroup?.color || 'blue'}
+    />
+
+    {/* Modal de Documentación de Funciones */}
+    <DocumentationModal
+      isOpen={isDocsOpen}
+      onClose={() => setIsDocsOpen(false)}
+    />
+  </div>
   );
 };

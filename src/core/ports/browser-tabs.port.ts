@@ -5,7 +5,7 @@ import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
 export interface IBrowserTabsPort {
   getOpenTabs(): Promise<readonly TabItem[]>;
   getTabGroups(): Promise<readonly TabGroup[]>;
-  createTab(url: string, active?: boolean): Promise<TabItem>;
+  createTab(url: string, active?: boolean, discard?: boolean): Promise<TabItem>;
   closeTabs(tabIds: readonly string[]): Promise<void>;
   discardTabs(tabIds: readonly string[]): Promise<void>; // Congela pestañas para recuperar RAM
   groupTabs(

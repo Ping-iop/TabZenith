@@ -4,8 +4,10 @@ import { useSessions } from './useSessions';
 import { useInbox } from './useInbox';
 import { container } from '../di/container';
 import { ExecutiveAnalyticsService } from '../services/executive-analytics.service';
+import { UrlCleanerService } from '../services/url-cleaner.service';
 import { ExecutiveMetrics } from '../domain/metrics.types';
 import { MarpDomainTaxonomy } from '../domain/classifier.types';
+import { TabItem } from '../domain/tab.types';
 
 export function useExecutiveDashboard() {
   const { tabs, groups, closeTabs, suspendTabs, refresh: refreshTabs } = useTabs();
@@ -145,31 +147,52 @@ export function useExecutiveDashboard() {
     setActionFeedback(`Se suspendieron ${ids.length} pestañas. ~${ramFreedMb} MB de RAM liberada.`);
   }, [tabs, suspendTabs]);
 
-  // Acción ejecutiva: Deduplicar pestañas
-  const deduplicateTabs = useCallback(async () => {
-    const seenUrls = new Set<string>();
-    const duplicateIds: string[] = [];
+  // Acción ejecutiva: Deduplicar pestañas de forma inteligente y segura
+  const deduplicateTabs = useCallback(
+    async (onDeduplicated?: (closedTabs: readonly TabItem[]) => void) => {
+      const seenUrls = new Map<string, TabItem>();
+      const tabsToClose: TabItem[] = [];
 
-    tabs.forEach((tab) => {
-      // Las pestañas fijadas JAMÁS se consideran duplicadas a cerrar
-      if (tab.pinned) return;
+      for (const tab of tabs) {
+        // Pestañas fijadas JAMÁS se consideran duplicadas a cerrar
+        if (tab.pinned) continue;
 
-      const cleanUrl = tab.url.split('?')[0].replace(/\/$/, '');
-      if (seenUrls.has(cleanUrl)) {
-        duplicateIds.push(tab.id);
-      } else {
-        seenUrls.add(cleanUrl);
+        // Limpiar parámetros espías (utm_*, fbclid) sin tocar parámetros de contenido (v, id, q, etc.)
+        const canonicalUrl = UrlCleanerService.canonicalizeForDeduplication(tab.url);
+        if (!canonicalUrl) continue;
+
+        if (!seenUrls.has(canonicalUrl)) {
+          seenUrls.set(canonicalUrl, tab);
+        } else {
+          const existing = seenUrls.get(canonicalUrl)!;
+          // Si la pestaña actual está activa y la previa no, cerramos la previa y conservamos la activa
+          if (tab.active && !existing.active) {
+            tabsToClose.push(existing);
+            seenUrls.set(canonicalUrl, tab);
+          } else {
+            tabsToClose.push(tab);
+          }
+        }
       }
-    });
 
-    if (duplicateIds.length === 0) {
-      setActionFeedback('No se detectaron pestañas duplicadas.');
-      return;
-    }
+      if (tabsToClose.length === 0) {
+        setActionFeedback('No se detectaron pestañas duplicadas idénticas.');
+        return [];
+      }
 
-    await closeTabs(duplicateIds);
-    setActionFeedback(`Se cerraron ${duplicateIds.length} pestañas duplicadas.`);
-  }, [tabs, closeTabs]);
+      const duplicateIds = tabsToClose.map((t) => t.id);
+
+      // Notificar al historial de pestañas cerradas antes de cerrar para permitir Undo
+      if (onDeduplicated) {
+        onDeduplicated(tabsToClose);
+      }
+
+      await closeTabs(duplicateIds);
+      setActionFeedback(`Se cerraron ${duplicateIds.length} pestañas duplicadas.`);
+      return tabsToClose;
+    },
+    [tabs, closeTabs]
+  );
 
   return {
     tabs,

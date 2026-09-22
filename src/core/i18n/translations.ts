@@ -19,6 +19,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'nav.pinned': 'Fijadas',
     'nav.inbox': 'Curaduría',
     'nav.sessions': 'Sesiones',
+    'nav.closedTabs': 'Pestañas Cerradas',
+    'nav.documentation': 'Documentación y Guía',
 
     // Filters
     'filter.clearDomains': 'Borrar filtro de dominios',
@@ -137,6 +139,46 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'mockBanner.desc': 'Estás visualizando TabZenith desde el servidor web local HTTP (127.0.0.1:5173). Por seguridad de Chrome, las páginas web comunes no pueden acceder a tus pestañas reales ni compartir storage con la extensión.',
     'mockBanner.btnOpenReal': 'Abrir Dashboard Real en Chrome',
     'mockBanner.shortcutHint': '💡 Usa el acceso directo actualizado en el Escritorio o ábrelo desde el popup de la extensión para gestionar tus pestañas reales.',
+
+    // Common
+    'common.close': 'Cerrar',
+
+    // Pestañas Cerradas
+    'closedTabs.title': 'Pestañas Cerradas Recientemente',
+    'closedTabs.desc': 'Registro de seguridad para recuperar enlaces cerrados por deduplicación o cierre manual.',
+    'closedTabs.restoreAll': 'Reabrir Todas',
+    'closedTabs.clearHistory': 'Limpiar Historial',
+    'closedTabs.emptyTitle': 'Historial de Cierre Limpio',
+    'closedTabs.emptyDesc': 'No hay pestañas cerradas recientemente. Cualquier pestaña deduplicada aparecerá aquí con opción de Deshacer.',
+    'closedTabs.reasonDeduplicate': 'Deduplicada',
+    'closedTabs.reasonManual': 'Cierre Manual',
+    'closedTabs.btnUndo': 'Reabrir',
+
+    // Documentación
+    'docs.modalTitle': 'Documentación y Guía de Funciones',
+    'docs.modalSubtitle': 'Conoce la arquitectura y funcionamiento de cada herramienta ejecutiva de TabZenith.',
+    'docs.topicDeduplicateTitle': 'Deduplicar Pestañas',
+    'docs.topicUndoTitle': 'Historial y Deshacer (Undo)',
+    'docs.topicRamSaverTitle': 'Congelar RAM (RAM Saver)',
+    'docs.topicLayaTitle': 'IA Laya Core en CPU',
+    'docs.topicDomainTitle': 'Agrupar por Dominio',
+    'docs.topicSessionsTitle': 'Stash & Guardado Dual',
+    'docs.topicInboxTitle': 'Inbox de Curaduría',
+
+    'docs.dedupTitle': 'Deduplicación Inteligente de Pestañas',
+    'docs.dedupSubtitle': 'Limpia parámetros de rastreo sin comprometer contenidos distintos.',
+    'docs.undoTitle': 'Historial de Cierre y Deshacer Inmediato',
+    'docs.undoSubtitle': 'Malla de protección para revertir cualquier cierre accidental.',
+    'docs.ramTitle': 'Congelación de Pestañas y Ahorro de Memoria RAM',
+    'docs.ramSubtitle': 'Suspensión nativa de pestañas inactivas en segundo plano.',
+    'docs.layaTitle': 'Clasificación Semántica con IA en CPU',
+    'docs.layaSubtitle': 'Privacidad absoluta mediante micro-modelo local en puerto 8092.',
+    'docs.domainTitle': 'Agrupación Automática por Dominio Web',
+    'docs.domainSubtitle': 'Consolida rápidamente pestañas del mismo sitio en grupos nativos de Chrome.',
+    'docs.sessionsTitle': 'Stash de Sesiones y Almacenamiento Dual',
+    'docs.sessionsSubtitle': 'Instantáneas completas respaldadas en IndexedDB y chrome.storage.',
+    'docs.inboxTitle': 'Bandeja de Curaduría de Enlaces Asíncrona',
+    'docs.inboxSubtitle': 'Guarda enlaces para procesar después sin saturar la memoria de tu navegador.',
   },
 
   en: {
@@ -157,6 +199,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'nav.pinned': 'Pinned',
     'nav.inbox': 'Curation Inbox',
     'nav.sessions': 'Sessions',
+    'nav.closedTabs': 'Closed Tabs',
+    'nav.documentation': 'Docs & Guide',
 
     // Filters
     'filter.clearDomains': 'Clear domain filter',
@@ -275,6 +319,46 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'mockBanner.desc': 'You are viewing TabZenith from the local HTTP web server (127.0.0.1:5173). Due to Chrome security policies, regular web pages cannot access your live Chrome tabs or share extension storage.',
     'mockBanner.btnOpenReal': 'Open Live Dashboard in Chrome',
     'mockBanner.shortcutHint': '💡 Use the updated Desktop shortcut or open from the extension popup to manage your live tabs.',
+
+    // Common
+    'common.close': 'Close',
+
+    // Closed Tabs
+    'closedTabs.title': 'Recently Closed Tabs',
+    'closedTabs.desc': 'Safety ledger to recover tabs closed via deduplication or manual cleanup.',
+    'closedTabs.restoreAll': 'Restore All',
+    'closedTabs.clearHistory': 'Clear History',
+    'closedTabs.emptyTitle': 'No Closed Tabs',
+    'closedTabs.emptyDesc': 'No recently closed tabs. Any deduplicated or closed tabs will appear here with an instant Undo option.',
+    'closedTabs.reasonDeduplicate': 'Deduplicated',
+    'closedTabs.reasonManual': 'Manual Close',
+    'closedTabs.btnUndo': 'Reopen',
+
+    // Documentation
+    'docs.modalTitle': 'Feature Documentation & Architecture Guide',
+    'docs.modalSubtitle': 'Understand the design and inner workings of every TabZenith executive tool.',
+    'docs.topicDeduplicateTitle': 'Deduplicate Tabs',
+    'docs.topicUndoTitle': 'History & Undo',
+    'docs.topicRamSaverTitle': 'RAM Saver (Discard)',
+    'docs.topicLayaTitle': 'Laya Core AI on CPU',
+    'docs.topicDomainTitle': 'Group by Domain',
+    'docs.topicSessionsTitle': 'Stash & Dual Storage',
+    'docs.topicInboxTitle': 'Curation Inbox',
+
+    'docs.dedupTitle': 'Smart Tab Deduplication',
+    'docs.dedupSubtitle': 'Cleans tracking parameters without harming different content.',
+    'docs.undoTitle': 'Closure History & Immediate Undo',
+    'docs.undoSubtitle': 'Safety net to revert accidental closures on demand.',
+    'docs.ramTitle': 'Tab Freezing & RAM Memory Optimization',
+    'docs.ramSubtitle': 'Native suspension of inactive background tabs in memory.',
+    'docs.layaTitle': 'Semantic Classification via Local CPU AI',
+    'docs.layaSubtitle': 'Total privacy via local micro-model on port 8092.',
+    'docs.domainTitle': 'Automatic Grouping by Web Domain',
+    'docs.domainSubtitle': 'Quickly consolidate tabs from the same site into native Chrome groups.',
+    'docs.sessionsTitle': 'Session Stash & Dual-Layer Storage',
+    'docs.sessionsSubtitle': 'Full browser snapshots backed up to IndexedDB and chrome.storage.',
+    'docs.inboxTitle': 'Asynchronous Link Curation Inbox',
+    'docs.inboxSubtitle': 'Save links for later reading without bogging down browser memory.',
   },
 
   ru: {
@@ -295,6 +379,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'nav.pinned': 'Закрепленные',
     'nav.inbox': 'Курация ссылок',
     'nav.sessions': 'Сессии',
+    'nav.closedTabs': 'Закрытые вкладки',
+    'nav.documentation': 'Документация и гид',
 
     // Filters
     'filter.clearDomains': 'Очистить фильтр доменов',
@@ -413,6 +499,46 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'mockBanner.desc': 'Вы просматриваете TabZenith через локальный HTTP-сервер (127.0.0.1:5173). Из соображений безопасности Chrome обычные веб-страницы не имеют доступа к реальным вкладкам браузера.',
     'mockBanner.btnOpenReal': 'Открыть рабочий Dashboard в Chrome',
     'mockBanner.shortcutHint': '💡 Запустите ярлык на Рабочем столе или откройте окно через всплывающее меню расширения.',
+
+    // Common
+    'common.close': 'Закрыть',
+
+    // Pestañas Cerradas
+    'closedTabs.title': 'Недавно закрытые вкладки',
+    'closedTabs.desc': 'Журнал безопасности для восстановления вкладок после дедупликации или ручного закрытия.',
+    'closedTabs.restoreAll': 'Восстановить все',
+    'closedTabs.clearHistory': 'Очистить историю',
+    'closedTabs.emptyTitle': 'Нет закрытых вкладок',
+    'closedTabs.emptyDesc': 'Нет закрытых вкладок. Все удаленные вкладки появятся здесь с кнопкой мгновенного возврата.',
+    'closedTabs.reasonDeduplicate': 'Дедуплицировано',
+    'closedTabs.reasonManual': 'Закрыто вручную',
+    'closedTabs.btnUndo': 'Открыть заново',
+
+    // Documentación
+    'docs.modalTitle': 'Документация и руководство по функциям',
+    'docs.modalSubtitle': 'Узнайте архитектуру и назначение каждого управленческого инструмента TabZenith.',
+    'docs.topicDeduplicateTitle': 'Дедупликация вкладок',
+    'docs.topicUndoTitle': 'История и возврат (Undo)',
+    'docs.topicRamSaverTitle': 'Экономия RAM (Заморозка)',
+    'docs.topicLayaTitle': 'ИИ Laya Core на CPU',
+    'docs.topicDomainTitle': 'Группировка по домену',
+    'docs.topicSessionsTitle': 'Stash и двойное хранилище',
+    'docs.topicInboxTitle': 'Курация ссылок',
+
+    'docs.dedupTitle': 'Умная дедупликация вкладок',
+    'docs.dedupSubtitle': 'Удаляет метки отслеживания, сохраняя уникальный контент.',
+    'docs.undoTitle': 'Журнал закрытия и мгновенный возврат',
+    'docs.undoSubtitle': 'Защитная сеть для отмены случайного закрытия.',
+    'docs.ramTitle': 'Заморозка вкладок и освобождение RAM',
+    'docs.ramSubtitle': 'Нативная приостановка неактивных фоновых вкладок.',
+    'docs.layaTitle': 'Семантическая классификация локальным ИИ на CPU',
+    'docs.layaSubtitle': 'Полная конфиденциальность без передачи данных в сеть (порт 8092).',
+    'docs.domainTitle': 'Автоматическая группировка по домену',
+    'docs.domainSubtitle': 'Быстро объединяет вкладки одного сайта в нативные группы Chrome.',
+    'docs.sessionsTitle': 'Stash сессий и двойное хранение',
+    'docs.sessionsSubtitle': 'Снимки сессий с резервированием в IndexedDB и chrome.storage.',
+    'docs.inboxTitle': 'Асинхронный накопитель ссылок',
+    'docs.inboxSubtitle': 'Сохраняйте ссылки на потом без перегрузки памяти браузера.',
   },
 
   zh: {
@@ -433,6 +559,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'nav.pinned': '固定标签',
     'nav.inbox': '链接策展箱',
     'nav.sessions': '会话归档',
+    'nav.closedTabs': '已关闭标签页',
+    'nav.documentation': '功能文档与指南',
 
     // Filters
     'filter.clearDomains': '清除域名过滤',
@@ -551,5 +679,45 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'mockBanner.desc': '您正在从本地 HTTP 服务 (127.0.0.1:5173) 查看 TabZenith。由于 Chrome 安全沙箱限制，普通网页无法读取真实的浏览器标签页。',
     'mockBanner.btnOpenReal': '在 Chrome 中打开真实扩展控制台',
     'mockBanner.shortcutHint': '💡 请使用桌面快捷方式或点击 Chrome 扩展栏图标中的“打开管理控制台”。',
+
+    // Common
+    'common.close': '关闭',
+
+    // Pestañas Cerradas
+    'closedTabs.title': '最近关闭的标签页',
+    'closedTabs.desc': '安全恢复日志，可找回通过去重或手动清理关闭的网页。',
+    'closedTabs.restoreAll': '恢复全部',
+    'closedTabs.clearHistory': '清空历史',
+    'closedTabs.emptyTitle': '无关闭记录',
+    'closedTabs.emptyDesc': '暂无关闭的标签页。任何去重或关闭的标签页均会显示在此处并提供撤销按钮。',
+    'closedTabs.reasonDeduplicate': '已去重',
+    'closedTabs.reasonManual': '手动关闭',
+    'closedTabs.btnUndo': '恢复',
+
+    // Documentación
+    'docs.modalTitle': '功能文档与架构指南',
+    'docs.modalSubtitle': '深入了解 TabZenith 各项管理工具的设计原理与运行机制。',
+    'docs.topicDeduplicateTitle': '智能去重',
+    'docs.topicUndoTitle': '关闭历史与撤销',
+    'docs.topicRamSaverTitle': '内存释放 (休眠)',
+    'docs.topicLayaTitle': 'CPU 本地 Laya AI',
+    'docs.topicDomainTitle': '按域名分组',
+    'docs.topicSessionsTitle': '会话 Stash 双重存储',
+    'docs.topicInboxTitle': '链接策展箱',
+
+    'docs.dedupTitle': '智能标签页去重系统',
+    'docs.dedupSubtitle': '精准清理追踪参数，绝不误关不同内容的网页。',
+    'docs.undoTitle': '关闭历史与即时撤销',
+    'docs.undoSubtitle': '全方位安全网，随时恢复意外关闭的页面。',
+    'docs.ramTitle': '标签页休眠与内存释放',
+    'docs.ramSubtitle': '原生挂起后台非活动标签页，大幅降低内存占用。',
+    'docs.layaTitle': '基于 CPU 本地 AI 的语义分类',
+    'docs.layaSubtitle': '无需云端，通过 8092 端口本地微模型保护绝对隐私。',
+    'docs.domainTitle': '按网站域名自动分组',
+    'docs.domainSubtitle': '快速将同一网站的网页聚合为 Chrome 原生彩色分组。',
+    'docs.sessionsTitle': '会话快照与双层持久化',
+    'docs.sessionsSubtitle': '完整浏览器状态同步备份至 IndexedDB 与 chrome.storage。',
+    'docs.inboxTitle': '异步链接策展与收集箱',
+    'docs.inboxSubtitle': '随手收藏链接稍后阅读，不再堆积海量常驻标签。',
   },
 };

@@ -31,4 +31,27 @@ describe('UrlCleanerService', () => {
     const emptyResult = UrlCleanerService.extractAndSanitizeUrls('texto sin enlaces');
     expect(emptyResult).toEqual([]);
   });
+
+  it('debe diferenciar páginas del mismo dominio con contenido diferente (ej. videos de YouTube o búsquedas)', () => {
+    const video1 = 'https://www.youtube.com/watch?v=video_A&utm_source=social';
+    const video2 = 'https://www.youtube.com/watch?v=video_B&utm_medium=email';
+
+    const canonical1 = UrlCleanerService.canonicalizeForDeduplication(video1);
+    const canonical2 = UrlCleanerService.canonicalizeForDeduplication(video2);
+
+    expect(canonical1).not.toBe(canonical2);
+    expect(canonical1).toBe('https://www.youtube.com/watch?v=video_A');
+    expect(canonical2).toBe('https://www.youtube.com/watch?v=video_B');
+  });
+
+  it('debe detectar como duplicadas dos URLs idénticas que solo varían en parámetros de tracking', () => {
+    const urlA = 'https://github.com/facebook/react/issues/42?utm_source=twitter';
+    const urlB = 'https://github.com/facebook/react/issues/42?fbclid=abcdefg';
+
+    const canonicalA = UrlCleanerService.canonicalizeForDeduplication(urlA);
+    const canonicalB = UrlCleanerService.canonicalizeForDeduplication(urlB);
+
+    expect(canonicalA).toBe(canonicalB);
+    expect(canonicalA).toBe('https://github.com/facebook/react/issues/42');
+  });
 });

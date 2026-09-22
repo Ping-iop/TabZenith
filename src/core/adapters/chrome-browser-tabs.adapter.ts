@@ -57,12 +57,41 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
     }));
   }
 
-  async createTab(url: string, active = true): Promise<TabItem> {
+  async createTab(url: string, active = true, discard = false): Promise<TabItem> {
     if (typeof chrome === 'undefined' || !chrome.tabs) {
       throw new Error('Chrome API no disponible en este entorno.');
     }
 
-    const tab = await chrome.tabs.create({ url, active });
+    const tab = await chrome.tabs.create({ url, active: discard ? false : active });
+
+    // Si se solicita congelada para optimizar RAM al restaurar sesiones masivas
+    if (discard && tab.id && chrome.tabs.discard) {
+      const tabId = tab.id;
+      try {
+        await chrome.tabs.discard(tabId);
+      } catch {
+        // Si el navegador requiere que complete la carga inicial antes de descartar
+        const onUpdateListener = (
+          updatedId: number,
+          changeInfo: chrome.tabs.TabChangeInfo
+        ) => {
+          if (updatedId === tabId && changeInfo.status === 'complete') {
+            chrome.tabs.onUpdated.removeListener(onUpdateListener);
+            chrome.tabs.discard(tabId).catch(() => {});
+          }
+        };
+        chrome.tabs.onUpdated.addListener(onUpdateListener);
+        setTimeout(() => {
+          try {
+            chrome.tabs.onUpdated.removeListener(onUpdateListener);
+            chrome.tabs.discard(tabId).catch(() => {});
+          } catch {
+            // Ignorar
+          }
+        }, 12000);
+      }
+    }
+
     return {
       id: String(tab.id),
       chromeTabId: tab.id,
@@ -75,7 +104,7 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
       index: tab.index,
       active: Boolean(tab.active),
       pinned: Boolean(tab.pinned),
-      discarded: false,
+      discarded: Boolean(discard),
       domain: new URL(url).hostname.replace(/^www\./, ''),
       tags: [],
       createdAt: Date.now(),

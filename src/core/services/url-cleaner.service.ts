@@ -92,4 +92,40 @@ export class UrlCleanerService {
       return null;
     }
   }
+
+  /**
+   * Genera una clave canónica precisa para la detección de duplicados:
+   * - Elimina exclusivamente parámetros de telemetría y rastreo (utm, fbclid, etc.)
+   * - Preserva intactos todos los parámetros de contenido (v, id, q, etc.)
+   * - Ordena parámetros para que diferencias de orden no impidan deduplicar
+   * - Normaliza barras finales redundantes
+   */
+  static canonicalizeForDeduplication(urlStr: string): string {
+    if (!urlStr || !urlStr.trim()) return '';
+    try {
+      const parsed = new URL(urlStr.trim());
+      // Eliminar únicamente parámetros de rastreo
+      const paramsToDelete: string[] = [];
+      parsed.searchParams.forEach((_, key) => {
+        if (TRACKING_PARAMS.has(key.toLowerCase()) || key.toLowerCase().startsWith('utm_')) {
+          paramsToDelete.push(key);
+        }
+      });
+      paramsToDelete.forEach((key) => parsed.searchParams.delete(key));
+
+      // Ordenar los parámetros restantes para consistencia canónica
+      parsed.searchParams.sort();
+
+      // Normalizar barra final
+      let pathname = parsed.pathname;
+      if (pathname.length > 1 && pathname.endsWith('/')) {
+        pathname = pathname.slice(0, -1);
+      }
+      parsed.pathname = pathname;
+
+      return parsed.toString();
+    } catch {
+      return urlStr.trim().toLowerCase();
+    }
+  }
 }

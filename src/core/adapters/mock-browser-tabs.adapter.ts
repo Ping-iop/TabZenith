@@ -113,14 +113,14 @@ export class MockBrowserTabsAdapter implements IBrowserTabsPort {
     return [...this.groups];
   }
 
-  async createTab(url: string, active = true): Promise<TabItem> {
+  async createTab(url: string, active = true, discard = false): Promise<TabItem> {
     const newTab: TabItem = {
-      id: `tab_${Date.now()}`,
+      id: `tab_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       title: url,
       url,
-      active,
+      active: discard ? false : active,
       pinned: false,
-      discarded: false,
+      discarded: discard,
       domain: new URL(url).hostname.replace(/^www\./, ''),
       tags: [],
       createdAt: Date.now(),

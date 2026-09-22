@@ -74,12 +74,19 @@ export function useTabs() {
     await fetchTabsAndGroups();
   }, [fetchTabsAndGroups]);
 
+  const createTab = useCallback(async (url: string, active = true, discard = false) => {
+    const tab = await container.browserTabs.createTab(url, active, discard);
+    await fetchTabsAndGroups();
+    return tab;
+  }, [fetchTabsAndGroups]);
+
   return {
     tabs,
     groups,
     loading,
     error,
     refresh: fetchTabsAndGroups,
+    createTab,
     closeTabs,
     suspendTabs,
     moveTabToGroup,
