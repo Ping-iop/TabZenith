@@ -202,28 +202,55 @@ export class TabGroupService {
       tabs.map((t) => ({ title: t.title, url: t.url }))
     );
 
-    const groupsMap = new Map<string, { color: ChromeGroupColor; tabIds: string[] }>();
+    const groupsMap = new Map<string, { color: ChromeGroupColor; tabs: TabItem[] }>();
 
     tabs.forEach((tab, index) => {
       const result = classifications[index];
       const categoryTitle = result.suggestedGroupName;
       const existing = groupsMap.get(categoryTitle) || {
         color: result.suggestedColor,
-        tabIds: [],
+        tabs: [],
       };
-      existing.tabIds.push(tab.id);
+      existing.tabs.push(tab);
       groupsMap.set(categoryTitle, existing);
     });
 
+    const singleTabs: TabItem[] = [];
     const createdCategories: string[] = [];
+
     for (const [categoryTitle, data] of groupsMap.entries()) {
-      if (data.tabIds.length > 0) {
-        await this.browserTabs.groupTabs(data.tabIds, undefined, {
-          title: categoryTitle,
-          color: data.color,
-        });
+      if (data.tabs.length === 1) {
+        singleTabs.push(data.tabs[0]);
+      } else if (data.tabs.length > 1) {
+        await this.browserTabs.groupTabs(
+          data.tabs.map((t) => t.id),
+          undefined,
+          {
+            title: categoryTitle,
+            color: data.color,
+          }
+        );
         createdCategories.push(categoryTitle);
       }
+    }
+
+    // Regla de sitios únicos: agruparlos en "Otros" ordenados alfabéticamente
+    if (singleTabs.length > 0) {
+      singleTabs.sort((a, b) => {
+        const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
+        if (dComp !== 0) return dComp;
+        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+      });
+
+      await this.browserTabs.groupTabs(
+        singleTabs.map((t) => t.id),
+        undefined,
+        {
+          title: 'Otros',
+          color: 'grey',
+        }
+      );
+      createdCategories.push('Otros');
     }
 
     return {
@@ -245,6 +272,8 @@ export class TabGroupService {
 
   /**
    * Opción Paralela 2: Agrupar por Dominio Web
+   * Cuando hay un solo website por dominio, no se crea un grupo individual;
+   * se consolidan en "Otros" ordenados alfabéticamente.
    */
   async groupByDomain(): Promise<{ groupedCount: number; groupsCreated: number }> {
     const allTabs = await this.browserTabs.getOpenTabs();
@@ -252,30 +281,64 @@ export class TabGroupService {
     const tabs = allTabs.filter((t) => !t.pinned);
     if (tabs.length === 0) return { groupedCount: 0, groupsCreated: 0 };
 
-    const domainMap = new Map<string, string[]>();
+    const domainMap = new Map<string, TabItem[]>();
     tabs.forEach((tab) => {
       const d = tab.domain || 'otros';
       const existing = domainMap.get(d) || [];
-      existing.push(tab.id);
+      existing.push(tab);
       domainMap.set(d, existing);
     });
 
+    const singleTabs: TabItem[] = [];
+    const multiTabDomains = new Map<string, TabItem[]>();
+
+    for (const [domain, domainTabs] of domainMap.entries()) {
+      if (domainTabs.length === 1) {
+        singleTabs.push(domainTabs[0]);
+      } else {
+        multiTabDomains.set(domain, domainTabs);
+      }
+    }
+
     const colors: ChromeGroupColor[] = [
-      'blue', 'green', 'purple', 'cyan', 'orange', 'yellow', 'red', 'pink', 'grey'
+      'blue', 'green', 'purple', 'cyan', 'orange', 'yellow', 'red', 'pink', 'teal', 'indigo', 'violet'
     ];
     let colorIndex = 0;
     let createdCount = 0;
 
-    for (const [domain, tabIds] of domainMap.entries()) {
-      if (tabIds.length > 0) {
+    for (const [domain, domainTabs] of multiTabDomains.entries()) {
+      if (domainTabs.length > 0) {
         const color = colors[colorIndex % colors.length];
         colorIndex++;
-        await this.browserTabs.groupTabs(tabIds, undefined, {
-          title: domain,
-          color,
-        });
+        await this.browserTabs.groupTabs(
+          domainTabs.map((t) => t.id),
+          undefined,
+          {
+            title: domain,
+            color,
+          }
+        );
         createdCount++;
       }
+    }
+
+    // Unificar sitios de 1 pestaña en "Otros" ordenados alfabéticamente
+    if (singleTabs.length > 0) {
+      singleTabs.sort((a, b) => {
+        const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
+        if (dComp !== 0) return dComp;
+        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+      });
+
+      await this.browserTabs.groupTabs(
+        singleTabs.map((t) => t.id),
+        undefined,
+        {
+          title: 'Otros',
+          color: 'grey',
+        }
+      );
+      createdCount++;
     }
 
     return {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard,
   Layers,
@@ -11,10 +11,13 @@ import {
   X,
   AlertTriangle,
   ExternalLink,
+  Star,
+  Pin,
 } from 'lucide-react';
 import { useTabs } from '@/core/hooks/useTabs';
 import { useSessions } from '@/core/hooks/useSessions';
 import { useInbox } from '@/core/hooks/useInbox';
+import { useFavorites } from '@/core/hooks/useFavorites';
 import { useExecutiveDashboard } from '@/core/hooks/useExecutiveDashboard';
 import { useSmartSearch } from '@/core/hooks/useSmartSearch';
 import { useI18n } from '@/core/i18n/I18nContext';
@@ -24,6 +27,8 @@ import { ExecutiveKpiGrid } from '@/ui/organisms/ExecutiveKpiGrid';
 import { ExecutiveActionsBar } from '@/ui/organisms/ExecutiveActionsBar';
 import { ExecutiveDataGrid } from '@/ui/organisms/ExecutiveDataGrid';
 import { TabGroupList } from '@/ui/organisms/TabGroupList';
+import { FavoritesView } from '@/ui/organisms/FavoritesView';
+import { PinnedTabsView } from '@/ui/organisms/PinnedTabsView';
 import { LinkInboxPanel } from '@/ui/organisms/LinkInboxPanel';
 import { SessionsView } from '@/ui/organisms/SessionsView';
 import { GroupManagementModal } from '@/ui/organisms/GroupManagementModal';
@@ -34,14 +39,22 @@ import { TabGroup } from '@/core/domain/group.types';
 import { ChromeGroupColor } from '@/ui/tokens/colors.tokens';
 import { container } from '@/core/di/container';
 
-type ActiveView = 'command_center' | 'groups_tabs' | 'inbox' | 'sessions';
+type ActiveView =
+  | 'command_center'
+  | 'groups_tabs'
+  | 'favorites'
+  | 'pinned'
+  | 'inbox'
+  | 'sessions';
 
 export const DashboardApp: React.FC = () => {
   const { t } = useI18n();
   const [activeView, setActiveView] = useState<ActiveView>('command_center');
   const [isLayaConnected, setIsLayaConnected] = useState<boolean | null>(null);
+  const [selectedDomainFilters, setSelectedDomainFilters] = useState<string[]>([]);
 
   // Hooks de lógica desacoplada
+  const { favorites, favoriteCount, toggleFavorite, isFavorite } = useFavorites();
   const {
     tabs,
     groups,
@@ -90,6 +103,26 @@ export const DashboardApp: React.FC = () => {
   } = useExecutiveDashboard();
 
   const { query, setQuery, searchResults, hasQuery } = useSmartSearch(tabs, inboxLinks);
+
+  // Filtrado por dominios seleccionados
+  const handleToggleDomainFilter = (domain: string) => {
+    setSelectedDomainFilters((prev) =>
+      prev.includes(domain) ? prev.filter((d) => d !== domain) : [...prev, domain]
+    );
+  };
+
+  const handleClearDomainFilters = () => {
+    setSelectedDomainFilters([]);
+  };
+
+  const displayedTabs = useMemo(() => {
+    if (selectedDomainFilters.length === 0) return tabs;
+    return tabs.filter((t) => selectedDomainFilters.includes(t.domain));
+  }, [tabs, selectedDomainFilters]);
+
+  const pinnedTabs = useMemo(() => {
+    return tabs.filter((t) => t.pinned);
+  }, [tabs]);
 
   // Estados de modales
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
@@ -225,6 +258,30 @@ export const DashboardApp: React.FC = () => {
               </button>
 
               <button
+                onClick={() => setActiveView('favorites')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'favorites'
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{t('nav.favorites')} ({favoriteCount})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveView('pinned')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeView === 'pinned'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-elevated'
+                }`}
+              >
+                <Pin className="w-3.5 h-3.5 text-blue-400 fill-blue-400/40" />
+                <span>{t('nav.pinned')} ({pinnedTabs.length})</span>
+              </button>
+
+              <button
                 onClick={() => setActiveView('inbox')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   activeView === 'inbox'
@@ -308,7 +365,13 @@ export const DashboardApp: React.FC = () => {
         {/* Vista 1: Centro de Mando Ejecutivo (Command Center) */}
         {activeView === 'command_center' && (
           <div className="space-y-6">
-            <ExecutiveKpiGrid metrics={metrics} isClassifying={isClassifying} />
+            <ExecutiveKpiGrid
+              metrics={metrics}
+              isClassifying={isClassifying}
+              selectedDomains={selectedDomainFilters}
+              onToggleDomain={handleToggleDomainFilter}
+              onClearDomainFilter={handleClearDomainFilters}
+            />
 
             <ExecutiveActionsBar
               onClassify={manualClassify}
@@ -322,7 +385,7 @@ export const DashboardApp: React.FC = () => {
             />
 
             <ExecutiveDataGrid
-              tabs={tabs}
+              tabs={displayedTabs}
               groups={groups}
               tabTaxonomyMap={tabTaxonomyMap}
               onBatchSuspend={suspendTabs}
@@ -330,6 +393,8 @@ export const DashboardApp: React.FC = () => {
               onBatchMoveToGroup={(tabIds, groupId) => {
                 tabIds.forEach((tId) => moveTabToGroup(tId, groupId));
               }}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
             />
           </div>
         )}
@@ -337,7 +402,7 @@ export const DashboardApp: React.FC = () => {
         {/* Vista 2: Grupos y Pestañas Abiertas */}
         {activeView === 'groups_tabs' && (
           <TabGroupList
-            tabs={tabs}
+            tabs={displayedTabs}
             groups={groups}
             tabTaxonomyMap={tabTaxonomyMap}
             onMoveToGroup={(tabId, groupId) => moveTabToGroup(tabId, groupId)}
@@ -350,10 +415,32 @@ export const DashboardApp: React.FC = () => {
             onCreateEmptyGroup={() => handleOpenCreateGroup()}
             onGroupByTopic={groupByTopic}
             onGroupByDomain={groupByDomain}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
           />
         )}
 
-        {/* Vista 3: Panel de Curaduría de Enlaces (Inbox con Filtro por Fechas) */}
+        {/* Vista 3: Pestañas Favoritas */}
+        {activeView === 'favorites' && (
+          <FavoritesView
+            openTabs={tabs}
+            favoriteUrls={favorites}
+            onToggleFavorite={toggleFavorite}
+            onCloseTab={(tabId) => closeTabs([tabId])}
+            onSuspendTab={(tabId) => suspendTabs([tabId])}
+          />
+        )}
+
+        {/* Vista 4: Pestañas Fijadas (Pinned) */}
+        {activeView === 'pinned' && (
+          <PinnedTabsView
+            pinnedTabs={pinnedTabs}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
+          />
+        )}
+
+        {/* Vista 5: Panel de Curaduría de Enlaces (Inbox con Filtro por Fechas) */}
         {activeView === 'inbox' && (
           <LinkInboxPanel
             links={inboxLinks}
@@ -367,7 +454,7 @@ export const DashboardApp: React.FC = () => {
           />
         )}
 
-        {/* Vista 4: Historial de Sesiones Guardadas (Stash) */}
+        {/* Vista 6: Historial de Sesiones Guardadas (Stash) */}
         {activeView === 'sessions' && (
           <SessionsView
             sessions={sessions}
@@ -377,6 +464,8 @@ export const DashboardApp: React.FC = () => {
             onRemoveTabFromSession={removeTabFromSession}
             onDelete={deleteSession}
             onSessionUpdated={refreshSessions}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
           />
         )}
       </main>

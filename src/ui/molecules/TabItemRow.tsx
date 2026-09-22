@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Snowflake, X } from 'lucide-react';
+import { Globe, Snowflake, X, Star } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
 import { MarpDomainTaxonomy } from '@/core/domain/classifier.types';
@@ -19,6 +19,8 @@ interface TabItemRowProps {
   isSelected?: boolean;
   onToggleSelect?: (selected: boolean) => void;
   showCheckbox?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
   className?: string;
 }
 
@@ -34,6 +36,8 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
   isSelected = false,
   onToggleSelect,
   showCheckbox = false,
+  isFavorite = false,
+  onToggleFavorite,
   className,
 }) => {
   return (
@@ -106,6 +110,20 @@ export const TabItemRow: React.FC<TabItemRowProps> = ({
       {/* Badges de clasificación y menú contextual */}
       <div className="flex items-center gap-2 flex-shrink-0 ml-2">
         {domainTaxonomy && <DomainBadge domain={domainTaxonomy} />}
+        {onToggleFavorite && (
+          <button
+            onClick={onToggleFavorite}
+            title={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorita'}
+            className={cn(
+              'p-1 rounded transition-colors',
+              isFavorite
+                ? 'text-amber-400 hover:text-amber-300'
+                : 'text-content-muted hover:text-amber-400 hover:bg-surface-elevated'
+            )}
+          >
+            <Star className={cn('w-3.5 h-3.5', isFavorite ? 'fill-amber-400' : '')} />
+          </button>
+        )}
         <ContextMenu
           tabId={tab.id}
           tabUrl={tab.url}

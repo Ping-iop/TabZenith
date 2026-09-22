@@ -5,6 +5,7 @@ import {
   FolderInput,
   Trash2,
   FileDown,
+  Star,
 } from 'lucide-react';
 import { TabItem } from '@/core/domain/tab.types';
 import { TabGroup } from '@/core/domain/group.types';
@@ -23,6 +24,8 @@ interface ExecutiveDataGridProps {
   onBatchSuspend: (tabIds: readonly string[]) => void;
   onBatchClose: (tabIds: readonly string[]) => void;
   onBatchMoveToGroup: (tabIds: readonly string[], groupId: string) => void;
+  isFavorite?: (url: string) => boolean;
+  onToggleFavorite?: (url: string) => void;
 }
 
 export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
@@ -32,6 +35,8 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
   onBatchSuspend,
   onBatchClose,
   onBatchMoveToGroup,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -197,6 +202,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                   className="w-4 h-4 rounded border-surface-border text-brand-primary focus:ring-brand-primary bg-surface-card"
                 />
               </th>
+              <th className="p-3 w-8 text-center" title="Favoritos">⭐</th>
               <th className="p-3">{t('grid.colTitle')}</th>
               <th className="p-3">{t('grid.colDomain')}</th>
               <th className="p-3">{t('grid.colCategory')}</th>
@@ -207,7 +213,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
           <tbody className="divide-y divide-surface-border">
             {filteredTabs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-content-muted">
+                <td colSpan={7} className="p-6 text-center text-content-muted">
                   {t('action.filterPlaceholder')}
                 </td>
               </tr>
@@ -217,6 +223,7 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                 const taxonomy = tabTaxonomyMap.get(tab.id);
                 const group = groups.find((g) => g.id === tab.groupId);
                 const colorInfo = group ? GROUP_COLOR_CLASSES[group.color] : null;
+                const tabIsFav = isFavorite?.(tab.url) ?? false;
 
                 return (
                   <tr
@@ -233,6 +240,25 @@ export const ExecutiveDataGrid: React.FC<ExecutiveDataGridProps> = ({
                         onChange={(e) => toggleSelectTab(tab.id, e.target.checked)}
                         className="w-4 h-4 rounded border-surface-border text-brand-primary focus:ring-brand-primary bg-surface-card"
                       />
+                    </td>
+                    <td className="p-3 text-center">
+                      {onToggleFavorite && (
+                        <button
+                          type="button"
+                          onClick={() => onToggleFavorite(tab.url)}
+                          title={tabIsFav ? 'Quitar de favoritos' : 'Marcar como favorita'}
+                          className="p-1 rounded hover:bg-surface-subtle transition-colors"
+                        >
+                          <Star
+                            className={cn(
+                              'w-3.5 h-3.5 transition-colors',
+                              tabIsFav
+                                ? 'text-amber-400 fill-amber-400'
+                                : 'text-content-muted hover:text-amber-400'
+                            )}
+                          />
+                        </button>
+                      )}
                     </td>
                     <td className="p-3 max-w-xs md:max-w-md">
                       <a

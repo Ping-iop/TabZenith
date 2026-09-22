@@ -26,8 +26,26 @@ export type TranslationKey =
   // Nav
   | 'nav.commandCenter'
   | 'nav.groupsTabs'
+  | 'nav.favorites'
+  | 'nav.pinned'
   | 'nav.inbox'
   | 'nav.sessions'
+  // Filters
+  | 'filter.clearDomains'
+  | 'filter.filteringBy'
+  | 'filter.tabsCount'
+  // Favorites View
+  | 'favorites.title'
+  | 'favorites.desc'
+  | 'favorites.empty'
+  | 'favorites.emptyDesc'
+  | 'favorites.openAll'
+  // Pinned View
+  | 'pinned.title'
+  | 'pinned.desc'
+  | 'pinned.empty'
+  | 'pinned.emptyDesc'
+  | 'pinned.protectedNotice'
   // KPIs
   | 'kpi.activeTabs'
   | 'kpi.frozenInRam'
@@ -76,6 +94,8 @@ export type TranslationKey =
   | 'session.tabCount'
   | 'session.groupCount'
   | 'session.confirmDelete'
+  | 'session.collapseAllGroups'
+  | 'session.expandAllGroups'
   // Inbox
   | 'inbox.title'
   | 'inbox.desc'
@@ -104,6 +124,7 @@ export type TranslationKey =
   | 'groups.sortAlpha'
   | 'groups.sortDefault'
   | 'groups.memoryUsage'
+  | 'groups.others'
   // Modals
   | 'modal.createTitle'
   | 'modal.editTitle'

@@ -13,6 +13,9 @@ import {
   Copy,
   Check,
   Globe,
+  Star,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { SessionSnapshot } from '@/core/domain/session.types';
 import { TabItem } from '@/core/domain/tab.types';
@@ -34,6 +37,8 @@ interface SessionsViewProps {
   onRemoveTabFromSession?: (sessionId: string, tabId: string) => void;
   onDelete: (sessionId: string) => void;
   onSessionUpdated?: () => void;
+  isFavorite?: (url: string) => boolean;
+  onToggleFavorite?: (url: string) => void;
 }
 
 export const SessionsView: React.FC<SessionsViewProps> = ({
@@ -44,6 +49,8 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
   onRemoveTabFromSession,
   onDelete,
   onSessionUpdated,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const { t } = useI18n();
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
@@ -51,6 +58,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
   const [selectedTabIds, setSelectedTabIds] = useState<Set<string>>(new Set());
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [isClassifyingSession, setIsClassifyingSession] = useState(false);
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(new Set());
 
   const handleExportBackup = () => {
     if (sessions.length === 0) return;
@@ -129,7 +137,27 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
     }
   };
 
-  // Clasificar sesión existente con Laya Core si no estaba organizada
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const handleCollapseAllGroups = (session: SessionSnapshot) => {
+    setCollapsedGroupIds(new Set(session.groups.map((g) => g.id)));
+  };
+
+  const handleExpandAllGroups = () => {
+    setCollapsedGroupIds(new Set());
+  };
+
+  // Clasificar sesión existente con Laya Core aplicando regla de sitios únicos a 'Otros'
   const handleAutoClassifySession = async (session: SessionSnapshot) => {
     setIsClassifyingSession(true);
     try {
@@ -137,34 +165,68 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
         session.tabs.map((t) => ({ title: t.title, url: t.url }))
       );
 
-      const autoGroups = new Map<string, TabGroup>();
-      const updatedTabs: TabItem[] = [];
+      const categoryBuckets = new Map<string, { color: TabGroup['color']; tabs: TabItem[] }>();
 
       session.tabs.forEach((tab, index) => {
         const c = classifications[index];
         const groupName = c.suggestedGroupName;
-        let group = autoGroups.get(groupName);
-        if (!group) {
-          group = {
-            id: `grp_laya_${c.primaryDomain}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        const bucket = categoryBuckets.get(groupName) || {
+          color: c.suggestedColor,
+          tabs: [],
+        };
+        bucket.tabs.push({
+          ...tab,
+          tags: Array.from(new Set([...tab.tags, c.primaryDomain])),
+        });
+        categoryBuckets.set(groupName, bucket);
+      });
+
+      const finalGroups: TabGroup[] = [];
+      const updatedTabs: TabItem[] = [];
+      const singleTabs: TabItem[] = [];
+
+      for (const [groupName, bucket] of categoryBuckets.entries()) {
+        if (bucket.tabs.length === 1) {
+          singleTabs.push(bucket.tabs[0]);
+        } else if (bucket.tabs.length > 1) {
+          const group: TabGroup = {
+            id: `grp_laya_${Math.random().toString(36).slice(2, 8)}`,
             title: groupName,
-            color: c.suggestedColor,
+            color: bucket.color,
             collapsed: false,
             createdAt: Date.now(),
           };
-          autoGroups.set(groupName, group);
+          finalGroups.push(group);
+          bucket.tabs.forEach((t) => {
+            updatedTabs.push({ ...t, groupId: group.id });
+          });
         }
+      }
 
-        updatedTabs.push({
-          ...tab,
-          groupId: group.id,
-          tags: Array.from(new Set([...tab.tags, c.primaryDomain])),
+      // Unificar sitios únicos en "Otros" ordenados alfabéticamente
+      if (singleTabs.length > 0) {
+        singleTabs.sort((a, b) => {
+          const dComp = a.domain.localeCompare(b.domain, undefined, { sensitivity: 'base' });
+          if (dComp !== 0) return dComp;
+          return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
         });
-      });
+
+        const othersGroup: TabGroup = {
+          id: `grp_laya_otros_${Date.now()}`,
+          title: 'Otros',
+          color: 'grey',
+          collapsed: false,
+          createdAt: Date.now(),
+        };
+        finalGroups.push(othersGroup);
+        singleTabs.forEach((t) => {
+          updatedTabs.push({ ...t, groupId: othersGroup.id });
+        });
+      }
 
       const updatedSession: SessionSnapshot = {
         ...session,
-        groups: Array.from(autoGroups.values()),
+        groups: finalGroups,
         tabs: updatedTabs,
       };
 
@@ -369,7 +431,32 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                       className="max-w-md bg-surface-card text-xs"
                     />
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {session.groups.length > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            leftIcon={<ChevronsDownUp className="w-3 h-3 text-content-secondary" />}
+                            onClick={() => handleCollapseAllGroups(session)}
+                            title="Ocultar todas las pestañas de los grupos"
+                            className="text-xs py-1 px-2.5 border-surface-border text-content-secondary hover:text-content-primary"
+                          >
+                            {t('session.collapseAllGroups')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            leftIcon={<ChevronsUpDown className="w-3 h-3 text-content-secondary" />}
+                            onClick={handleExpandAllGroups}
+                            title="Mostrar todas las pestañas de los grupos"
+                            className="text-xs py-1 px-2.5 border-surface-border text-content-secondary hover:text-content-primary"
+                          >
+                            {t('session.expandAllGroups')}
+                          </Button>
+                        </div>
+                      )}
+
                       {session.groups.length === 0 && (
                         <Button
                           size="sm"
@@ -377,7 +464,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                           isLoading={isClassifyingSession}
                           leftIcon={<Sparkles className="w-3.5 h-3.5 text-brand-primary" />}
                           onClick={() => handleAutoClassifySession(session)}
-                          title="Usa Laya Core en CPU para organizar automáticamente las 414 pestañas de esta sesión"
+                          title="Usa Laya Core en CPU para organizar automáticamente las pestañas de esta sesión"
                           className="text-xs"
                         >
                           Clasificar con Laya
@@ -410,6 +497,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                       const group = groupMap.get(groupId);
                       if (!group) return null;
                       const colorInfo = GROUP_COLOR_CLASSES[group.color];
+                      const isGroupCollapsed = collapsedGroupIds.has(groupId);
 
                       return (
                         <div
@@ -418,13 +506,27 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                             'rounded-lg border border-surface-border bg-surface-card/80 p-3 space-y-2'
                           )}
                         >
-                          {/* Cabecera del Grupo en Sesión */}
+                          {/* Cabecera del Grupo en Sesión (Interactivo para mostrar u ocultar) */}
                           <div className="flex items-center justify-between border-b border-surface-border/50 pb-2">
-                            <div className="flex items-center gap-2">
+                            <div
+                              className="flex items-center gap-2 cursor-pointer select-none"
+                              onClick={() => toggleGroupCollapse(groupId)}
+                              title={isGroupCollapsed ? 'Mostrar pestañas del grupo' : 'Ocultar pestañas del grupo'}
+                            >
+                              <button
+                                type="button"
+                                className="text-content-muted hover:text-content-primary"
+                              >
+                                {isGroupCollapsed ? (
+                                  <ChevronRight className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 text-brand-primary" />
+                                )}
+                              </button>
                               <span
                                 className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', colorInfo.dot)}
                               />
-                              <span className="font-semibold text-xs text-content-primary">
+                              <span className="font-semibold text-xs text-content-primary hover:text-brand-primary transition-colors">
                                 {group.title}
                               </span>
                               <span className="text-[11px] text-content-muted">
@@ -445,8 +547,9 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                             )}
                           </div>
 
-                          {/* Pestañas del Grupo */}
-                          <div className="space-y-1.5 pt-1">
+                          {/* Pestañas del Grupo (Mostrar / Ocultar) */}
+                          {!isGroupCollapsed && (
+                            <div className="space-y-1.5 pt-1">
                             {groupTabs.map((tab) => (
                               <div
                                 key={tab.id}
@@ -497,6 +600,23 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                                     {tab.domain}
                                   </span>
 
+                                  {onToggleFavorite && (
+                                    <button
+                                      onClick={() => onToggleFavorite(tab.url)}
+                                      title={isFavorite?.(tab.url) ? 'Quitar de favoritos' : 'Marcar como favorita'}
+                                      className="p-1 rounded text-content-muted hover:text-amber-400 hover:bg-surface-elevated transition-colors"
+                                    >
+                                      <Star
+                                        className={cn(
+                                          'w-3 h-3',
+                                          isFavorite?.(tab.url)
+                                            ? 'text-amber-400 fill-amber-400'
+                                            : 'text-content-muted'
+                                        )}
+                                      />
+                                    </button>
+                                  )}
+
                                   <button
                                     onClick={() => handleCopyUrl(tab.url)}
                                     title="Copiar URL"
@@ -530,6 +650,7 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                               </div>
                             ))}
                           </div>
+                          )}
                         </div>
                       );
                     })}
@@ -592,6 +713,23 @@ export const SessionsView: React.FC<SessionsViewProps> = ({
                                 <span className="text-[10px] font-mono text-content-secondary px-1.5 py-0.5 rounded bg-surface-card border border-surface-border">
                                   {tab.domain}
                                 </span>
+
+                                {onToggleFavorite && (
+                                  <button
+                                    onClick={() => onToggleFavorite(tab.url)}
+                                    title={isFavorite?.(tab.url) ? 'Quitar de favoritos' : 'Marcar como favorita'}
+                                    className="p-1 rounded text-content-muted hover:text-amber-400 hover:bg-surface-elevated transition-colors"
+                                  >
+                                    <Star
+                                      className={cn(
+                                        'w-3 h-3',
+                                        isFavorite?.(tab.url)
+                                          ? 'text-amber-400 fill-amber-400'
+                                          : 'text-content-muted'
+                                      )}
+                                    />
+                                  </button>
+                                )}
 
                                 <button
                                   onClick={() => handleCopyUrl(tab.url)}

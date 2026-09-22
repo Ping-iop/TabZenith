@@ -15,8 +15,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     // Nav
     'nav.commandCenter': 'Centro de Mando',
     'nav.groupsTabs': 'Grupos y Pestañas',
+    'nav.favorites': 'Favoritos',
+    'nav.pinned': 'Fijadas',
     'nav.inbox': 'Curaduría',
     'nav.sessions': 'Sesiones',
+
+    // Filters
+    'filter.clearDomains': 'Borrar filtro de dominios',
+    'filter.filteringBy': 'Filtrando por',
+    'filter.tabsCount': 'pestañas visibles',
+
+    // Favorites View
+    'favorites.title': 'Pestañas Favoritas',
+    'favorites.desc': 'Accede rápidamente a tus pestañas marcadas con estrella en cualquier momento.',
+    'favorites.empty': 'No tienes pestañas favoritas aún',
+    'favorites.emptyDesc': 'Haz clic en el icono de estrella (⭐) en cualquier pestaña del tablero para fijarla como favorita.',
+    'favorites.openAll': 'Abrir Todas en Chrome',
+
+    // Pinned View
+    'pinned.title': 'Pestañas Fijadas (Pinned Tabs)',
+    'pinned.desc': 'Pestañas ancladas en tu navegador Chrome. Cuentan con inmunidad total contra cierres masivos o deduplicaciones.',
+    'pinned.empty': 'No hay pestañas fijadas',
+    'pinned.emptyDesc': 'Haz clic derecho en una pestaña en Chrome y selecciona "Fijar" para anclarla.',
+    'pinned.protectedNotice': 'Protección Estricta: Las pestañas fijadas nunca son cerradas, agrupadas ni modificadas por acciones automatizadas.',
 
     // KPIs
     'kpi.activeTabs': 'Pestañas Activas',
@@ -69,6 +90,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'session.tabCount': 'pestañas',
     'session.groupCount': 'grupos',
     'session.confirmDelete': '¿Estás seguro de que deseas eliminar esta sesión archivada?',
+    'session.collapseAllGroups': 'Colapsar todos los grupos',
+    'session.expandAllGroups': 'Expandir todos los grupos',
 
     // Inbox
     'inbox.title': 'Bandeja de Curaduría de Enlaces',
@@ -99,6 +122,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.sortAlpha': 'Ordenar A-Z',
     'groups.sortDefault': 'Orden de Chrome',
     'groups.memoryUsage': 'RAM estimada',
+    'groups.others': 'Otros',
 
     // Modals
     'modal.createTitle': 'Crear Nuevo Grupo de Pestañas',
@@ -129,8 +153,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     // Nav
     'nav.commandCenter': 'Command Center',
     'nav.groupsTabs': 'Groups & Tabs',
+    'nav.favorites': 'Favorites',
+    'nav.pinned': 'Pinned',
     'nav.inbox': 'Curation Inbox',
     'nav.sessions': 'Sessions',
+
+    // Filters
+    'filter.clearDomains': 'Clear domain filter',
+    'filter.filteringBy': 'Filtering by',
+    'filter.tabsCount': 'tabs visible',
+
+    // Favorites View
+    'favorites.title': 'Favorite Tabs',
+    'favorites.desc': 'Quickly access your starred tabs at any time.',
+    'favorites.empty': 'No favorite tabs yet',
+    'favorites.emptyDesc': 'Click the star icon (⭐) on any tab to mark it as a favorite.',
+    'favorites.openAll': 'Open All in Chrome',
+
+    // Pinned View
+    'pinned.title': 'Pinned Tabs',
+    'pinned.desc': 'Tabs pinned in your Chrome browser. Protected against mass closes and deduplication.',
+    'pinned.empty': 'No pinned tabs',
+    'pinned.emptyDesc': 'Right-click a tab in Chrome and select "Pin" to anchor it.',
+    'pinned.protectedNotice': 'Strict Protection: Pinned tabs are never closed, grouped or altered by automated actions.',
 
     // KPIs
     'kpi.activeTabs': 'Active Tabs',
@@ -183,6 +228,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'session.tabCount': 'tabs',
     'session.groupCount': 'groups',
     'session.confirmDelete': 'Are you sure you want to delete this archived session?',
+    'session.collapseAllGroups': 'Collapse all groups',
+    'session.expandAllGroups': 'Expand all groups',
 
     // Inbox
     'inbox.title': 'Link Curation Inbox',
@@ -213,6 +260,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.sortAlpha': 'Sort A-Z',
     'groups.sortDefault': 'Chrome Order',
     'groups.memoryUsage': 'Est. RAM',
+    'groups.others': 'Others',
 
     // Modals
     'modal.createTitle': 'Create New Tab Group',
@@ -243,8 +291,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     // Nav
     'nav.commandCenter': 'Центр управления',
     'nav.groupsTabs': 'Группы и вкладки',
+    'nav.favorites': 'Избранное',
+    'nav.pinned': 'Закрепленные',
     'nav.inbox': 'Курация ссылок',
     'nav.sessions': 'Сессии',
+
+    // Filters
+    'filter.clearDomains': 'Очистить фильтр доменов',
+    'filter.filteringBy': 'Фильтрация по',
+    'filter.tabsCount': 'вкладок видно',
+
+    // Favorites View
+    'favorites.title': 'Избранные вкладки',
+    'favorites.desc': 'Быстрый доступ к отмеченным звёздочкой вкладкам в любое время.',
+    'favorites.empty': 'Нет избранных вкладок',
+    'favorites.emptyDesc': 'Нажмите на звёздочку (⭐) на любой вкладке, чтобы добавить её в избранное.',
+    'favorites.openAll': 'Открыть все в Chrome',
+
+    // Pinned View
+    'pinned.title': 'Закреплённые вкладки (Pinned)',
+    'pinned.desc': 'Закреплённые вкладки в браузере Chrome. Защищены от массового закрытия и удаления дубликатов.',
+    'pinned.empty': 'Нет закреплённых вкладок',
+    'pinned.emptyDesc': 'Нажмите правой кнопкой мыши по вкладке в Chrome и выберите "Закрепить".',
+    'pinned.protectedNotice': 'Строгая защита: Закреплённые вкладки никогда не закрываются и не изменяются автоматическими действиями.',
 
     // KPIs
     'kpi.activeTabs': 'Активные вкладки',
@@ -297,6 +366,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'session.tabCount': 'вкладок',
     'session.groupCount': 'групп',
     'session.confirmDelete': 'Вы уверены, что хотите удалить эту архивную сессию?',
+    'session.collapseAllGroups': 'Свернуть все группы',
+    'session.expandAllGroups': 'Развернуть все группы',
 
     // Inbox
     'inbox.title': 'Входящие для курации ссылок',
@@ -327,6 +398,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.sortAlpha': 'По алфавиту А-Я',
     'groups.sortDefault': 'Порядок Chrome',
     'groups.memoryUsage': 'Память RAM',
+    'groups.others': 'Другие',
 
     // Modals
     'modal.createTitle': 'Создать новую группу вкладок',
@@ -357,8 +429,29 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     // Nav
     'nav.commandCenter': '指挥中心',
     'nav.groupsTabs': '分组与标签页',
+    'nav.favorites': '收藏夹',
+    'nav.pinned': '固定标签',
     'nav.inbox': '链接策展箱',
     'nav.sessions': '会话归档',
+
+    // Filters
+    'filter.clearDomains': '清除域名过滤',
+    'filter.filteringBy': '过滤条件',
+    'filter.tabsCount': '个可见标签页',
+
+    // Favorites View
+    'favorites.title': '收藏标签页',
+    'favorites.desc': '随时快速访问您加星标的重点标签页。',
+    'favorites.empty': '暂无收藏的标签页',
+    'favorites.emptyDesc': '点击任意标签页上的星标图标 (⭐) 即可将其添加到收藏夹。',
+    'favorites.openAll': '在 Chrome 中打开全部',
+
+    // Pinned View
+    'pinned.title': '固定标签页 (Pinned Tabs)',
+    'pinned.desc': '在 Chrome 浏览器中固定的标签页。免受批量关闭和重复清理的影响。',
+    'pinned.empty': '暂无固定标签页',
+    'pinned.emptyDesc': '在 Chrome 标签页上右键单击并选择“固定”以将其锁定。',
+    'pinned.protectedNotice': '严格保护：固定标签页绝不会被自动化操作关闭、重新分组或更改。',
 
     // KPIs
     'kpi.activeTabs': '活跃标签页',
@@ -411,6 +504,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'session.tabCount': '个标签页',
     'session.groupCount': '个分组',
     'session.confirmDelete': '确定要彻底删除该归档会话吗？',
+    'session.collapseAllGroups': '折叠所有分组',
+    'session.expandAllGroups': '展开所有分组',
 
     // Inbox
     'inbox.title': '链接策展收集箱',
@@ -441,6 +536,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Record<TranslationKey, stri
     'groups.sortAlpha': '按名称 A-Z 排序',
     'groups.sortDefault': '浏览器原始顺序',
     'groups.memoryUsage': '预估内存',
+    'groups.others': '其他',
 
     // Modals
     'modal.createTitle': '创建新标签页分组',

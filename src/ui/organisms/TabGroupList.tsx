@@ -36,6 +36,8 @@ interface TabGroupListProps {
   onCreateEmptyGroup: () => void;
   onGroupByTopic?: () => void;
   onGroupByDomain?: () => void;
+  isFavorite?: (url: string) => boolean;
+  onToggleFavorite?: (url: string) => void;
 }
 
 export const TabGroupList: React.FC<TabGroupListProps> = ({
@@ -52,6 +54,8 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
   onCreateEmptyGroup,
   onGroupByTopic,
   onGroupByDomain,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const { t } = useI18n();
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -256,6 +260,8 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                       onUngroup={() => onUngroupTab(tab.id)}
                       onSuspend={() => onSuspendTab(tab.id)}
                       onClose={() => onCloseTab(tab.id)}
+                      isFavorite={isFavorite ? isFavorite(tab.url) : false}
+                      onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(tab.url) : undefined}
                     />
                   ))
                 )}
@@ -294,6 +300,8 @@ export const TabGroupList: React.FC<TabGroupListProps> = ({
                 onUngroup={() => onUngroupTab(tab.id)}
                 onSuspend={() => onSuspendTab(tab.id)}
                 onClose={() => onCloseTab(tab.id)}
+                isFavorite={isFavorite ? isFavorite(tab.url) : false}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(tab.url) : undefined}
               />
             ))}
           </div>
