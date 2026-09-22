@@ -149,41 +149,89 @@ export class ChromeBrowserTabsAdapter implements IBrowserTabsPort {
       .filter((id) => !Number.isNaN(id));
 
     if (numericTabIds.length === 0) {
-      throw new Error('No se proporcionaron pestañas válidas para agrupar.');
+      return '';
     }
 
-    const options: chrome.tabs.GroupOptions = {
-      tabIds: numericTabIds as [number, ...number[]],
-    };
+    // Consultar el estado real e instantáneo de las pestañas en Chrome
+    const currentTabs = await chrome.tabs.query({});
+    const currentTabMap = new Map(currentTabs.map((t) => [t.id, t]));
 
-    if (groupId) {
-      const numericGroupId = Number(groupId);
-      if (!Number.isNaN(numericGroupId)) {
-        options.groupId = numericGroupId;
+    // Filtrar estrictamente solo aquellas pestañas que siguen existiendo y NO están fijadas (pinned)
+    const validTabs = numericTabIds
+      .map((id) => currentTabMap.get(id))
+      .filter((t): t is chrome.tabs.Tab => Boolean(t && !t.pinned && t.id !== undefined));
+
+    if (validTabs.length === 0) {
+      return '';
+    }
+
+    // Chrome requiere que las pestañas agrupadas pertenezcan a la misma ventana
+    const tabsByWindow = new Map<number, number[]>();
+    for (const tab of validTabs) {
+      const wId = tab.windowId;
+      const list = tabsByWindow.get(wId) || [];
+      list.push(tab.id!);
+      tabsByWindow.set(wId, list);
+    }
+
+    let lastGroupId: number | undefined;
+
+    for (const [, ids] of tabsByWindow.entries()) {
+      if (ids.length === 0) continue;
+      try {
+        const options: chrome.tabs.GroupOptions = {
+          tabIds: ids as [number, ...number[]],
+        };
+
+        if (groupId) {
+          const numericGroupId = Number(groupId);
+          if (!Number.isNaN(numericGroupId)) {
+            options.groupId = numericGroupId;
+          }
+        }
+
+        let targetGroupId: number;
+        try {
+          targetGroupId = await chrome.tabs.group(options);
+        } catch {
+          // Si el grupo objetivo ya no existe en la ventana, crear uno nuevo
+          targetGroupId = await chrome.tabs.group({
+            tabIds: ids as [number, ...number[]],
+          });
+        }
+
+        lastGroupId = targetGroupId;
+
+        if (groupDetails && chrome.tabGroups?.update) {
+          await chrome.tabGroups.update(targetGroupId, {
+            title: groupDetails.title,
+            color: toNativeChromeTabGroupColor(groupDetails.color),
+          });
+        }
+      } catch (groupErr) {
+        console.warn('[TabZenith] Error al agrupar lote de pestañas en Chrome:', groupErr);
       }
     }
 
-    const targetGroupId = await chrome.tabs.group(options);
-
-    if (groupDetails && chrome.tabGroups?.update) {
-      await chrome.tabGroups.update(targetGroupId, {
-        title: groupDetails.title,
-        color: toNativeChromeTabGroupColor(groupDetails.color),
-      });
-    }
-
-    return String(targetGroupId);
+    return lastGroupId ? String(lastGroupId) : '';
   }
 
   async ungroupTabs(tabIds: readonly string[]): Promise<void> {
     if (typeof chrome === 'undefined' || !chrome.tabs?.ungroup) return;
 
+    const currentTabs = await chrome.tabs.query({});
+    const aliveIds = new Set(currentTabs.map((t) => t.id));
+
     const numericTabIds = tabIds
       .map((id) => Number(id))
-      .filter((id) => !Number.isNaN(id));
+      .filter((id) => !Number.isNaN(id) && aliveIds.has(id));
 
     if (numericTabIds.length > 0) {
-      await chrome.tabs.ungroup(numericTabIds as [number, ...number[]]);
+      try {
+        await chrome.tabs.ungroup(numericTabIds as [number, ...number[]]);
+      } catch (err) {
+        console.warn('[TabZenith] Error al desagrupar pestañas en Chrome:', err);
+      }
     }
   }
 

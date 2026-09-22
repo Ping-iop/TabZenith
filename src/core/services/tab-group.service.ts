@@ -193,7 +193,9 @@ export class TabGroupService {
    * Ejecuta auto-clasificación en vivo sobre las pestañas abiertas en Chrome.
    */
   async autoClassifyAndGroupOpenTabs(): Promise<{ groupedCount: number; categories: string[] }> {
-    const tabs = await this.browserTabs.getOpenTabs();
+    const allTabs = await this.browserTabs.getOpenTabs();
+    // Proteger estrictamente pestañas fijadas (pinned): no se agrupan
+    const tabs = allTabs.filter((t) => !t.pinned);
     if (tabs.length === 0) return { groupedCount: 0, categories: [] };
 
     const classifications = await this.classifier.classifyBatch(
@@ -245,7 +247,9 @@ export class TabGroupService {
    * Opción Paralela 2: Agrupar por Dominio Web
    */
   async groupByDomain(): Promise<{ groupedCount: number; groupsCreated: number }> {
-    const tabs = await this.browserTabs.getOpenTabs();
+    const allTabs = await this.browserTabs.getOpenTabs();
+    // Proteger estrictamente pestañas fijadas (pinned): no se agrupan
+    const tabs = allTabs.filter((t) => !t.pinned);
     if (tabs.length === 0) return { groupedCount: 0, groupsCreated: 0 };
 
     const domainMap = new Map<string, string[]>();
